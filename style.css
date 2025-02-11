@@ -1,0 +1,5 @@
+body {
+  /* 마진, 패딩값 없이 깔끔하게 */
+  padding: 0px !important;
+  margin: 0px !important;
+}
