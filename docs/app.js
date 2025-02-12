@@ -20,6 +20,30 @@ fetch("/api/key")
   })
   .catch((error) => console.error("Failed to load API key:", error));
 
+// ✅ 카카오 API 키 가져오기
+fetch("/api/kakao-key")
+  .then((response) => {
+    if (!response.ok) throw new Error("Kakao API Key fetch failed");
+    return response.json();
+  })
+  .then((data) => {
+    if (!data.kakaoApiKey) throw new Error("Kakao API Key is missing");
+
+    // ✅ 카카오 지도 API 스크립트 동적 로드
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${data.kakaoApiKey}`;
+    script.onload = initKakaoMap;
+    document.head.appendChild(script);
+  })
+  .catch((error) => console.error("Failed to load Kakao API key:", error));
+
+// ✅ 카카오 지도 초기화 함수
+function initKakaoMap() {
+  console.log("Kakao Map API Loaded Successfully!");
+  // 카카오 지도 초기화 코드를 여기에 추가
+}
+
 // ✅ 관광 데이터 가져오기
 fetch("/api/data")
   .then((response) => response.json())
@@ -102,6 +126,7 @@ function addMarkers() {
     infowindowList.forEach((infowindow) => infowindow.close());
   }
 }
+
 $("#current").click(() => {
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(
