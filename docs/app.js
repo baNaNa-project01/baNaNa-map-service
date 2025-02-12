@@ -89,9 +89,16 @@ function addMarkers() {
       if (infowindow.getMap()) {
         infowindow.close();
       } else {
-        infowindowList.forEach((iw) => iw.close()); // 다른 윈도우 닫기
+        closeAllInfoWindows(); // 다른 윈도우 닫기
         infowindow.open(map, marker);
       }
     });
   });
+
+  // ✅ 지도 클릭 시 모든 인포 윈도우 닫기
+  naver.maps.Event.addListener(map, "click", closeAllInfoWindows);
+
+  function closeAllInfoWindows() {
+    infowindowList.forEach((infowindow) => infowindow.close());
+  }
 }
