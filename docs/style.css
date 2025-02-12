@@ -32,3 +32,12 @@ body {
   font-size: 15px;
   font-weight: bolder;
 }
+
+.marker {
+  border: 1px solid black;
+  background: yellowgreen;
+  opacity: 0.8;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
