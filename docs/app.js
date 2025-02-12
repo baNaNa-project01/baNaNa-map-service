@@ -11,6 +11,8 @@ fetch("/api/key")
   .then((data) => {
     if (!data.clientId) throw new Error("API Key is missing");
 
+    console.log("✅ 네이버 API Key 로드 성공");
+
     // 네이버 지도 API 스크립트 동적 로드
     const script = document.createElement("script");
     script.type = "text/javascript";
@@ -29,6 +31,8 @@ fetch("/api/kakao-key")
   .then((data) => {
     if (!data.kakaoApiKey) throw new Error("Kakao API Key is missing");
 
+    console.log("✅ 카카오 API Key 로드 성공");
+
     // ✅ 카카오 지도 API 스크립트 동적 로드
     const script = document.createElement("script");
     script.type = "text/javascript";
@@ -40,23 +44,32 @@ fetch("/api/kakao-key")
 
 // ✅ `kakao` 객체가 로드될 때까지 기다리는 함수
 function waitForKakaoInit() {
-  if (window.kakao && window.kakao.maps) {
+  console.log("⌛ waitForKakaoInit 실행됨");
+
+  if (window.kakao && window.kakao.maps && kakao.maps.services) {
+    console.log("✅ Kakao API 로드 성공!");
     initKakaoMap();
   } else {
+    console.warn("⏳ Kakao API가 아직 로드되지 않음... 100ms 후 재시도");
     setTimeout(waitForKakaoInit, 100);
   }
 }
-
 // ✅ 카카오 지도 초기화 함수
 function initKakaoMap() {
-  console.log("Kakao Map API Loaded Successfully!");
-  window.search_loc = new kakao.maps.services.Places();
+  console.log("📌 initKakaoMap 실행됨");
+  if (window.kakao && window.kakao.maps && kakao.maps.services) {
+    window.search_loc = new kakao.maps.services.Places();
+    console.log("✅ Kakao Places 서비스 초기화 완료");
+  } else {
+    console.error("❌ Kakao Places 서비스 초기화 실패");
+  }
 }
 
 // ✅ 관광 데이터 가져오기
 fetch("/api/data")
   .then((response) => response.json())
   .then((data) => {
+    console.log("✅ 관광 데이터 로드 성공");
     markerData = data;
     if (map) {
       addMarkers();
@@ -66,6 +79,7 @@ fetch("/api/data")
 
 // 지도 생성
 function initMap() {
+  console.log("📌 initMap 실행됨");
   const mapOptions = {
     center: new naver.maps.LatLng(37.3595704, 127.105399),
     zoom: 10,
@@ -73,6 +87,8 @@ function initMap() {
 
   // 지도 객체 저장
   map = new naver.maps.Map("map", mapOptions);
+
+  console.log("✅ 네이버 지도 초기화 완료");
 
   // 데이터가 이미 로드된 경우 마커 추가
   if (markerData.length > 0) {
@@ -136,7 +152,7 @@ function addMarkers() {
   }
 }
 
-// 현재 위치 버튼을 눌렀을때 실행될 함수
+// ✅ 현재 위치 버튼 기능
 $("#current").click(() => {
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(
@@ -172,22 +188,44 @@ $("#current").click(() => {
   }
 });
 
-// 검색 버튼
+// ✅ 검색 기능
+function searchHandler() {
+  let content = $("#search_input").val().trim();
+  if (!content) {
+    alert("검색어를 입력하세요.");
+    return;
+  }
+
+  console.log("🔍 검색 요청:", content);
+
+  if (window.search_loc) {
+    window.search_loc.keywordSearch(content, searchPlace);
+  } else {
+    console.error("❌ Kakao search service is not initialized yet.");
+  }
+}
+
+// ✅ 검색 버튼 이벤트 리스너
 $("#search_input").on("keydown", function (e) {
   if (e.keyCode === 13) {
-    let content = $(this).val();
-    if (window.search_loc) {
-      window.search_loc.keywordSearch(content, searchPlace);
-    } else {
-      console.error("Kakao search service is not initialized yet.");
-    }
+    searchHandler();
   }
 });
+$("#search_btn").on("click", function () {
+  searchHandler();
+});
 
+// ✅ Kakao 검색 결과 처리
 function searchPlace(data, status, pagination) {
+  console.log("📌 searchPlace 함수 호출됨");
+
   if (status === kakao.maps.services.Status.OK) {
-    console.log("검색 결과:", data);
+    console.log("✅ 검색 결과:", data);
+  } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
+    console.warn("⚠️ 검색 결과 없음");
+    alert("검색 결과가 없습니다.");
   } else {
-    alert("검색결과가 없습니다.");
+    console.error("❌ 검색 오류 발생:", status);
+    alert("검색 중 오류가 발생했습니다.");
   }
 }
