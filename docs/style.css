@@ -41,3 +41,24 @@ body {
   height: 24px;
   border-radius: 30%;
 }
+
+.infowindow_wrap {
+  background: white;
+  padding: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.infowindow_title {
+  font-size: 15px;
+  font-weight: bolder;
+}
+
+.infowindow_content {
+  font-size: 13px;
+  font-weight: normal;
+}
+
+.infowindow_createdTime {
+  font-size: 13px;
+  font-weight: normal;
+}
