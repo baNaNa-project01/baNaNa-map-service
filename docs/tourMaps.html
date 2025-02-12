@@ -12,12 +12,25 @@
     ></script>
   </head>
   <body>
+    <!-- 일단 그냥 만든 배너 -->
     <div id="navbar">TourMap</div>
+
+    <!-- 오늘 날짜 박스(나중에 기능 구현) -->
     <div id="infoBox">
       <div id="infoTitle">오늘 날짜</div>
       <div id="infoContent">2025.02.12</div>
     </div>
+
+    <!-- 검색창 -->
+    <div id="search">
+      <input id="search_input" placeholder="어디로 갈까?" />
+      <button id="search_btn">검색</button>
+    </div>
+
+    <!-- 현위치 불러오는 버튼 -->
     <div id="current">현재 위치</div>
+
+    <!-- !지도! -->
     <div id="map" style="width: 100%; height: 100vh"></div>
     <script src="app.js"></script>
   </body>
