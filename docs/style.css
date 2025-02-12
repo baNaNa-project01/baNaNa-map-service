@@ -62,3 +62,17 @@ body {
   font-size: 13px;
   font-weight: normal;
 }
+
+#current {
+  position: absolute;
+  top: 180px;
+  z-index: 10000;
+  background: rgb(50, 205, 50);
+  left: 20px;
+  padding: 15px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: bolder;
+}
