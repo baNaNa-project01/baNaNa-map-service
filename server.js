@@ -21,6 +21,17 @@ app.get("/api/key", (req, res) => {
   res.json({ clientId });
 });
 
+// 카카오 불러와야징
+app.get("/api/kakao-key", (req, res) => {
+  const kakaoApiKey = process.env.KAKAO_APIKEY;
+  if (!kakaoApiKey) {
+    return res
+      .status(500)
+      .json({ error: "Kakao API Key is missing in server" });
+  }
+  res.json({ kakaoApiKey });
+});
+
 // ✅ [추가] 관광 데이터 제공 API
 app.get("/api/data", (req, res) => {
   res.json([
