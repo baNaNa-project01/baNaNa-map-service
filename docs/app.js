@@ -32,16 +32,25 @@ fetch("/api/kakao-key")
     // ✅ 카카오 지도 API 스크립트 동적 로드
     const script = document.createElement("script");
     script.type = "text/javascript";
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${data.kakaoApiKey}`;
-    script.onload = initKakaoMap;
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${data.kakaoApiKey}&libraries=services`;
+    script.onload = waitForKakaoInit;
     document.head.appendChild(script);
   })
   .catch((error) => console.error("Failed to load Kakao API key:", error));
 
+// ✅ `kakao` 객체가 로드될 때까지 기다리는 함수
+function waitForKakaoInit() {
+  if (window.kakao && window.kakao.maps) {
+    initKakaoMap();
+  } else {
+    setTimeout(waitForKakaoInit, 100);
+  }
+}
+
 // ✅ 카카오 지도 초기화 함수
 function initKakaoMap() {
   console.log("Kakao Map API Loaded Successfully!");
-  // 카카오 지도 초기화 코드를 여기에 추가
+  window.search_loc = new kakao.maps.services.Places();
 }
 
 // ✅ 관광 데이터 가져오기
@@ -127,6 +136,7 @@ function addMarkers() {
   }
 }
 
+// 현재 위치 버튼을 눌렀을때 실행될 함수
 $("#current").click(() => {
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(
@@ -135,23 +145,19 @@ $("#current").click(() => {
         const lng = position.coords.longitude;
         const latlng = new naver.maps.LatLng(lat, lng);
 
-        // ✅ 기존 마커 삭제 (중복 방지)
         if (window.currentLocationMarker) {
           window.currentLocationMarker.setMap(null);
         }
 
-        // ✅ 새 마커 추가
         window.currentLocationMarker = new naver.maps.Marker({
           position: latlng,
           map: map,
           icon: {
-            content:
-              '<img class="myloc" draggable="false" unselectable="on" src="https://github.com/jungmyung16/day12_ChatBotWeb/blob/main/apple-touch-icon.png?raw=true"></div>',
+            content: '<img class="myloc" src="your-icon-url">',
             anchor: new naver.maps.Point(11, 11),
           },
         });
 
-        // ✅ 지도 이동 및 줌 조정
         map.setZoom(14, false);
         map.panTo(latlng);
       },
@@ -159,13 +165,29 @@ $("#current").click(() => {
         console.error("Geolocation error:", error);
         alert("위치를 가져올 수 없습니다. 브라우저 권한을 확인하세요.");
       },
-      {
-        enableHighAccuracy: true, // GPS 기반으로 더 정확한 위치 가져오기
-        timeout: 10000, // 10초 안에 응답이 없으면 오류 처리
-        maximumAge: 0, // 캐시된 위치 사용 X
-      }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   } else {
     alert("위치 정보를 지원하지 않는 브라우저입니다.");
   }
 });
+
+// 검색 버튼
+$("#search_input").on("keydown", function (e) {
+  if (e.keyCode === 13) {
+    let content = $(this).val();
+    if (window.search_loc) {
+      window.search_loc.keywordSearch(content, searchPlace);
+    } else {
+      console.error("Kakao search service is not initialized yet.");
+    }
+  }
+});
+
+function searchPlace(data, status, pagination) {
+  if (status === kakao.maps.services.Status.OK) {
+    console.log("검색 결과:", data);
+  } else {
+    alert("검색결과가 없습니다.");
+  }
+}
