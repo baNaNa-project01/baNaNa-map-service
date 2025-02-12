@@ -102,3 +102,6 @@ function addMarkers() {
     infowindowList.forEach((infowindow) => infowindow.close());
   }
 }
+$("#current").click(() => {
+  alert("클릭 이벤트");
+});
