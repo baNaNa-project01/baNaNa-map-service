@@ -103,5 +103,44 @@ function addMarkers() {
   }
 }
 $("#current").click(() => {
-  alert("클릭 이벤트");
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const latlng = new naver.maps.LatLng(lat, lng);
+
+        // ✅ 기존 마커 삭제 (중복 방지)
+        if (window.currentLocationMarker) {
+          window.currentLocationMarker.setMap(null);
+        }
+
+        // ✅ 새 마커 추가
+        window.currentLocationMarker = new naver.maps.Marker({
+          position: latlng,
+          map: map,
+          icon: {
+            content:
+              '<img class="myloc" draggable="false" unselectable="on" src="https://github.com/jungmyung16/day12_ChatBotWeb/blob/main/apple-touch-icon.png?raw=true"></div>',
+            anchor: new naver.maps.Point(11, 11),
+          },
+        });
+
+        // ✅ 지도 이동 및 줌 조정
+        map.setZoom(14, false);
+        map.panTo(latlng);
+      },
+      function (error) {
+        console.error("Geolocation error:", error);
+        alert("위치를 가져올 수 없습니다. 브라우저 권한을 확인하세요.");
+      },
+      {
+        enableHighAccuracy: true, // GPS 기반으로 더 정확한 위치 가져오기
+        timeout: 10000, // 10초 안에 응답이 없으면 오류 처리
+        maximumAge: 0, // 캐시된 위치 사용 X
+      }
+    );
+  } else {
+    alert("위치 정보를 지원하지 않는 브라우저입니다.");
+  }
 });
