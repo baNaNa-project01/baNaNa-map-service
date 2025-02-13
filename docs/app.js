@@ -205,8 +205,12 @@ $("#search_btn").on("click", function () {
   searchHandler();
 });
 
-/* 기존 검색 마커 제거 */
+/* 기존 검색 마커 및 인포윈도우 제거 */
 function clearSearchMarkers() {
+  // 먼저 모든 인포윈도우를 닫습니다.
+  searchInfoWindows.forEach((iw) => {
+    iw.close();
+  });
   if (searchMarkers.length > 0) {
     searchMarkers.forEach((marker) => {
       marker.setMap(null);
@@ -227,16 +231,13 @@ function searchPlace(data, status, pagination) {
     var bounds = new naver.maps.LatLngBounds();
 
     data.forEach((place) => {
-      // 콘솔에 각 장소 정보를 출력
       console.log("검색된 장소 정보:", place);
 
-      // Kakao API 결과: place.y(위도), place.x(경도)
       var position = new naver.maps.LatLng(
         parseFloat(place.y),
         parseFloat(place.x)
       );
 
-      // 검색 결과 마커 생성 (검색 결과용 마커는 .search-marker 클래스를 사용)
       var marker = new naver.maps.Marker({
         map: map,
         position: position,
@@ -247,7 +248,6 @@ function searchPlace(data, status, pagination) {
       });
       searchMarkers.push(marker);
 
-      // 인포윈도우 내용 구성 (장소 정보 포함)
       var content = `<div class='infowindow_wrap'>
           <div class='infowindow_title'>${place.place_name}</div>
           <div class='infowindow_content'>${place.address_name}</div>
@@ -264,18 +264,24 @@ function searchPlace(data, status, pagination) {
       });
       searchInfoWindows.push(infowindow);
 
-      // 마커 클릭 시 해당 인포윈도우 열기
+      // 검색 마커 클릭 시 인포윈도우 토글 처리
       naver.maps.Event.addListener(marker, "click", function () {
-        searchInfoWindows.forEach((iw) => {
-          iw.close();
-        });
-        infowindow.open(map, marker);
+        if (infowindow.getMap()) {
+          infowindow.close();
+        } else {
+          searchInfoWindows.forEach((iw) => iw.close());
+          infowindow.open(map, marker);
+        }
       });
 
       bounds.extend(position);
     });
 
-    // 모든 검색 결과가 보이도록 지도 범위 조정
+    // 지도 클릭 시에도 검색 인포윈도우 닫기
+    naver.maps.Event.addListener(map, "click", function () {
+      searchInfoWindows.forEach((iw) => iw.close());
+    });
+
     map.fitBounds(bounds);
   } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
     console.warn("⚠️ 검색 결과 없음");
