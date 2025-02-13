@@ -159,7 +159,7 @@ $("#current").click(() => {
   }
 });
 
-/* 8. 검색 기능 - 입력값을 가져와 Kakao Places 검색 요청 */
+/* 8. 키워드 검색 기능 - 입력값을 가져와 Kakao Places 키워드 검색 요청 (현재 지도 영역 내 검색) */
 function searchHandler() {
   let content = $("#search_input").val().trim();
   if (!content) {
@@ -168,7 +168,9 @@ function searchHandler() {
   }
   console.log("🔍 검색 요청:", content);
   if (window.search_loc) {
-    window.search_loc.keywordSearch(content, searchPlace);
+    window.search_loc.keywordSearch(content, searchPlace, {
+      useMapBounds: true,
+    });
   } else {
     console.error("❌ Kakao search service is not initialized yet.");
   }
@@ -183,7 +185,7 @@ $("#search_btn").on("click", function () {
   searchHandler();
 });
 
-/* 기존 검색 마커 및 인포윈도우 제거 */
+/* 9. 기존 검색 마커 및 인포윈도우 제거 */
 function clearSearchMarkers() {
   searchInfoWindows.forEach((iw) => {
     iw.close();
@@ -197,26 +199,21 @@ function clearSearchMarkers() {
   }
 }
 
-/* 9. Kakao 검색 결과 처리 및 지도와 목록에 표출 */
+/* 10. 키워드 검색 결과 처리 및 지도/목록에 표출 */
 function searchPlace(data, status, pagination) {
   console.log("📌 searchPlace 함수 호출됨");
   if (status === kakao.maps.services.Status.OK) {
     clearSearchMarkers();
-    // 검색 결과 목록 초기화
     const listEl = document.getElementById("placesList");
     if (listEl) listEl.innerHTML = "";
-    // 결과가 있으면 검색 목록 창 보이기
     document.getElementById("menu_wrap").style.display = "block";
-
     var bounds = new naver.maps.LatLngBounds();
-
     data.forEach(function (place, i) {
       console.log("검색된 장소 정보:", place);
       var position = new naver.maps.LatLng(
         parseFloat(place.y),
         parseFloat(place.x)
       );
-      // 검색 결과 마커 생성 (Naver Map)
       var marker = new naver.maps.Marker({
         map: map,
         position: position,
@@ -226,7 +223,6 @@ function searchPlace(data, status, pagination) {
         },
       });
       searchMarkers.push(marker);
-      // 인포윈도우 생성
       var content = `<div class='infowindow_wrap'>
           <div class='infowindow_title'>${place.place_name}</div>
           <div class='infowindow_content'>${place.address_name}</div>
@@ -241,7 +237,6 @@ function searchPlace(data, status, pagination) {
         anchorSize: new naver.maps.Size(10, 10),
       });
       searchInfoWindows.push(infowindow);
-      // 검색 마커 클릭 시 인포윈도우 토글 처리
       naver.maps.Event.addListener(marker, "click", function () {
         if (infowindow.getMap()) {
           infowindow.close();
@@ -250,7 +245,6 @@ function searchPlace(data, status, pagination) {
           infowindow.open(map, marker);
         }
       });
-      // 결과 목록에 항목 추가 (클릭 이벤트로 인포윈도우 열고 지도 중심 이동)
       if (listEl) {
         var itemEl = document.createElement("li");
         itemEl.className = "item";
@@ -274,7 +268,6 @@ function searchPlace(data, status, pagination) {
           "</span>" +
           "</div>";
         itemEl.innerHTML = itemStr;
-        // 목록 항목 클릭 시 인포윈도우 열고, 지도 중심 이동
         itemEl.onclick = function () {
           searchInfoWindows.forEach((iw) => iw.close());
           infowindow.open(map, marker);
@@ -285,12 +278,9 @@ function searchPlace(data, status, pagination) {
       bounds.extend(position);
     });
     map.fitBounds(bounds);
-
-    // 추가: 지도 클릭 시 검색 인포윈도우 모두 닫기
     naver.maps.Event.addListener(map, "click", function () {
       searchInfoWindows.forEach((iw) => iw.close());
     });
-
     displayPagination(pagination);
   } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
     alert("검색 결과가 존재하지 않습니다.");
@@ -302,7 +292,126 @@ function searchPlace(data, status, pagination) {
   }
 }
 
-/* 10. 페이지네이션 표시 (공식 예제 참고) */
+/* 11. 카테고리 검색 기능 */
+function searchByCategory(categoryCode) {
+  if (!categoryCode) {
+    alert("카테고리를 선택해주세요.");
+    return;
+  }
+  console.log("🔍 카테고리 검색 요청:", categoryCode);
+  if (window.search_loc) {
+    // Naver 지도에서 현재 보이는 영역의 경계 구하기
+    const naverBounds = map.getBounds();
+    const sw = naverBounds.getSW();
+    const ne = naverBounds.getNE();
+    // Kakao 지도 객체의 LatLng로 변환
+    const kakaoSw = new kakao.maps.LatLng(sw.lat(), sw.lng());
+    const kakaoNe = new kakao.maps.LatLng(ne.lat(), ne.lng());
+    // Kakao의 LatLngBounds 객체 생성
+    const kakaoBounds = new kakao.maps.LatLngBounds(kakaoSw, kakaoNe);
+
+    // categorySearch 시 bounds 옵션에 kakaoBounds 객체를 넘김
+    window.search_loc.categorySearch(categoryCode, categorySearchCB, {
+      bounds: kakaoBounds,
+    });
+  } else {
+    console.error("❌ Kakao search service is not initialized yet.");
+  }
+}
+
+function categorySearchCB(data, status, pagination) {
+  console.log("📌 categorySearchCB 호출됨");
+  if (status === kakao.maps.services.Status.OK) {
+    clearSearchMarkers();
+    const listEl = document.getElementById("placesList");
+    if (listEl) listEl.innerHTML = "";
+    document.getElementById("menu_wrap").style.display = "block";
+    var bounds = new naver.maps.LatLngBounds();
+    data.forEach(function (place, i) {
+      console.log("검색된 장소 정보:", place);
+      var position = new naver.maps.LatLng(
+        parseFloat(place.y),
+        parseFloat(place.x)
+      );
+      var marker = new naver.maps.Marker({
+        map: map,
+        position: position,
+        icon: {
+          content: `<div class='search-marker'></div>`,
+          anchor: new naver.maps.Point(12, 12),
+        },
+      });
+      searchMarkers.push(marker);
+      var content = `<div class='infowindow_wrap'>
+          <div class='infowindow_title'>${place.place_name}</div>
+          <div class='infowindow_content'>${place.address_name}</div>
+          <div class='infowindow_phone'>${
+            place.phone ? place.phone : "전화번호 정보 없음"
+          }</div>
+        </div>`;
+      var infowindow = new naver.maps.InfoWindow({
+        content: content,
+        backgroundColor: "rgba(255, 255, 255, 0.9)",
+        borderColor: "#ccc",
+        anchorSize: new naver.maps.Size(10, 10),
+      });
+      searchInfoWindows.push(infowindow);
+      naver.maps.Event.addListener(marker, "click", function () {
+        if (infowindow.getMap()) {
+          infowindow.close();
+        } else {
+          searchInfoWindows.forEach((iw) => iw.close());
+          infowindow.open(map, marker);
+        }
+      });
+      if (listEl) {
+        var itemEl = document.createElement("li");
+        itemEl.className = "item";
+        var itemStr =
+          '<span class="markerbg marker_' +
+          (i + 1) +
+          '"></span>' +
+          '<div class="info">' +
+          "<h5>" +
+          place.place_name +
+          "</h5>" +
+          (place.road_address_name
+            ? "<span>" +
+              place.road_address_name +
+              "</span><br><span class='jibun gray'>" +
+              place.address_name +
+              "</span><br>"
+            : "<span>" + place.address_name + "</span><br>") +
+          "<span class='tel'>" +
+          (place.phone || "") +
+          "</span>" +
+          "</div>";
+        itemEl.innerHTML = itemStr;
+        itemEl.onclick = function () {
+          searchInfoWindows.forEach((iw) => iw.close());
+          infowindow.open(map, marker);
+          map.panTo(position);
+        };
+        listEl.appendChild(itemEl);
+      }
+      bounds.extend(position);
+    });
+    map.fitBounds(bounds);
+    naver.maps.Event.addListener(map, "click", function () {
+      searchInfoWindows.forEach((iw) => iw.close());
+    });
+    displayPagination(pagination);
+  } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
+    alert("검색 결과가 존재하지 않습니다.");
+    document.getElementById("menu_wrap").style.display = "none";
+    return;
+  } else {
+    alert("검색 결과 중 오류가 발생했습니다.");
+    return;
+  }
+}
+
+/* 12. 페이지네이션 표시 (공식 예제 참고) */
 function displayPagination(pagination) {
   var paginationEl = document.getElementById("pagination"),
     fragment = document.createDocumentFragment();
@@ -326,3 +435,9 @@ function displayPagination(pagination) {
   }
   paginationEl.appendChild(fragment);
 }
+
+/* 13. 카테고리 검색 버튼 이벤트 */
+$("#category_search_btn").on("click", function () {
+  var catCode = $("#category_select").val();
+  searchByCategory(catCode);
+});
