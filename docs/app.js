@@ -202,10 +202,14 @@ function searchPlace(data, status, pagination) {
   console.log("📌 searchPlace 함수 호출됨");
   if (status === kakao.maps.services.Status.OK) {
     clearSearchMarkers();
-    // 목록 초기화
+    // 검색 결과 목록 초기화
     const listEl = document.getElementById("placesList");
     if (listEl) listEl.innerHTML = "";
+    // 결과가 있으면 검색 목록 창 보이기
+    document.getElementById("menu_wrap").style.display = "block";
+
     var bounds = new naver.maps.LatLngBounds();
+
     data.forEach(function (place, i) {
       console.log("검색된 장소 정보:", place);
       var position = new naver.maps.LatLng(
@@ -237,7 +241,7 @@ function searchPlace(data, status, pagination) {
         anchorSize: new naver.maps.Size(10, 10),
       });
       searchInfoWindows.push(infowindow);
-      // 검색 마커 클릭 시 토글 처리
+      // 검색 마커 클릭 시 인포윈도우 토글 처리
       naver.maps.Event.addListener(marker, "click", function () {
         if (infowindow.getMap()) {
           infowindow.close();
@@ -246,7 +250,7 @@ function searchPlace(data, status, pagination) {
           infowindow.open(map, marker);
         }
       });
-      // 결과 목록에 항목 추가 (공식 예제 참고)
+      // 결과 목록에 항목 추가 (클릭 이벤트로 인포윈도우 열고 지도 중심 이동)
       if (listEl) {
         var itemEl = document.createElement("li");
         itemEl.className = "item";
@@ -257,36 +261,40 @@ function searchPlace(data, status, pagination) {
           '<div class="info">' +
           "<h5>" +
           place.place_name +
-          "</h5>";
-        if (place.road_address_name) {
-          itemStr +=
-            "<span>" +
-            place.road_address_name +
-            "</span>" +
-            '<span class="jibun gray">' +
-            place.address_name +
-            "</span>";
-        } else {
-          itemStr += "<span>" + place.address_name + "</span>";
-        }
-        itemStr +=
-          "<span class='tel'>" + (place.phone || "") + "</span>" + "</div>";
+          "</h5>" +
+          (place.road_address_name
+            ? "<span>" +
+              place.road_address_name +
+              "</span><br><span class='jibun gray'>" +
+              place.address_name +
+              "</span><br>"
+            : "<span>" + place.address_name + "</span><br>") +
+          "<span class='tel'>" +
+          (place.phone || "") +
+          "</span>" +
+          "</div>";
         itemEl.innerHTML = itemStr;
-        // 마우스오버 시 해당 마커의 인포윈도우 표출
-        itemEl.onmouseover = function () {
+        // 목록 항목 클릭 시 인포윈도우 열고, 지도 중심 이동
+        itemEl.onclick = function () {
+          searchInfoWindows.forEach((iw) => iw.close());
           infowindow.open(map, marker);
-        };
-        itemEl.onmouseout = function () {
-          infowindow.close();
+          map.panTo(position);
         };
         listEl.appendChild(itemEl);
       }
       bounds.extend(position);
     });
     map.fitBounds(bounds);
+
+    // 추가: 지도 클릭 시 검색 인포윈도우 모두 닫기
+    naver.maps.Event.addListener(map, "click", function () {
+      searchInfoWindows.forEach((iw) => iw.close());
+    });
+
     displayPagination(pagination);
   } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
     alert("검색 결과가 존재하지 않습니다.");
+    document.getElementById("menu_wrap").style.display = "none";
     return;
   } else {
     alert("검색 결과 중 오류가 발생했습니다.");
