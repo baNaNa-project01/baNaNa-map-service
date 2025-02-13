@@ -33,9 +33,20 @@ body {
   font-weight: bolder;
 }
 
+/* 관광 데이터 마커 스타일 */
 .marker {
   border: 1px solid black;
   background: aquamarine;
+  opacity: 0.8;
+  width: 24px;
+  height: 24px;
+  border-radius: 30%;
+}
+
+/* 검색 결과 마커 스타일 */
+.search-marker {
+  border: 1px solid red;
+  background: orange;
   opacity: 0.8;
   width: 24px;
   height: 24px;
@@ -110,17 +121,14 @@ body {
 @keyframes pulse {
   0% {
     box-shadow: 0 0 0 0 rgba(204, 49, 44, 0.4);
-    /* 파이어 폭스 브라우저에서도 사용될려면 -moz-를 붙인다고 한다.(그냥 한 번 써봄) */
     -moz-box-shadow: 0 0 0 0 rgba(204, 49, 44, 0.4);
   }
   70% {
     box-shadow: 0 0 0 20px rgba(204, 49, 44, 0);
-    /* 파이어 폭스 브라우저에서도 사용될려면 -moz-를 붙인다고 한다.(그냥 한 번 써봄) */
     -moz-box-shadow: 0 0 0 20px rgba(204, 49, 44, 0);
   }
   100% {
     box-shadow: 0 0 0 0 rgba(204, 49, 44, 0);
-    /* 파이어 폭스 브라우저에서도 사용될려면 -moz-를 붙인다고 한다.(그냥 한 번 써봄) */
     -moz-box-shadow: 0 0 0 0 rgba(204, 49, 44, 0);
   }
 }
