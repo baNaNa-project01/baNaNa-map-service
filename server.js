@@ -1,3 +1,4 @@
+// server.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -9,10 +10,10 @@ const port = 3000;
 // CORS 설정
 app.use(cors());
 
-// 정적 파일 제공
-app.use(express.static(path.join(__dirname, "docs"))); // docs 폴더 내 정적 파일 제공
+// 정적 파일 제공 (docs 폴더 내 파일 제공)
+app.use(express.static(path.join(__dirname, "docs")));
 
-// ✅ [추가] 네이버 지도 API 키 제공 엔드포인트
+// 네이버 지도 API 키 제공 엔드포인트
 app.get("/api/key", (req, res) => {
   const clientId = process.env.NAVER_CLIENT_ID;
   if (!clientId) {
@@ -21,18 +22,7 @@ app.get("/api/key", (req, res) => {
   res.json({ clientId });
 });
 
-// 카카오 불러와야징
-app.get("/api/kakao-key", (req, res) => {
-  const kakaoApiKey = process.env.KAKAO_APIKEY;
-  if (!kakaoApiKey) {
-    return res
-      .status(500)
-      .json({ error: "Kakao API Key is missing in server" });
-  }
-  res.json({ kakaoApiKey });
-});
-
-// ✅ [추가] 관광 데이터 제공 API
+// 관광 데이터 제공 API
 app.get("/api/data", (req, res) => {
   res.json([
     {
