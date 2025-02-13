@@ -436,8 +436,8 @@ function displayPagination(pagination) {
   paginationEl.appendChild(fragment);
 }
 
-/* 13. 카테고리 검색 버튼 이벤트 */
-$("#category_search_btn").on("click", function () {
-  var catCode = $("#category_select").val();
+/* 13. 카테고리 버튼 클릭 이벤트 (옵션박스 대신 버튼으로 처리) */
+$(document).on("click", ".category-btn", function () {
+  var catCode = $(this).data("cat");
   searchByCategory(catCode);
 });
