@@ -119,24 +119,54 @@ body {
   outline: none;
 }
 
-/* 카테고리 검색 영역 (같은 스타일 적용) */
-#category_search {
+/* 카테고리 섹션 스타일 */
+#category_section {
   position: absolute;
-  top: 160px;
+  top: 170px;
   left: 140px;
+  width: 90%;
+  max-width: 800px;
   z-index: 10000;
-  background: rgba(255, 255, 255, 0.5);
-  padding: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-  text-align: center;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
   margin-top: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+#category_section h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  text-align: center;
+}
+
+/* 카테고리 버튼 스타일 */
+#category_buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+#category_buttons button {
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  background: #fff;
+  border-radius: 20px;
+  transition: background 0.3s, color 0.3s;
+}
+
+#category_buttons button:hover {
+  background: #f0f0f0;
 }
 
 /* 검색 결과 목록 창: 처음엔 숨김, 배경 불투명도 0.5, 크기 조절 */
 #menu_wrap {
   position: absolute;
-  top: 220px;
+  top: 250px;
   left: 140px;
   z-index: 10000;
   display: none; /* 검색 전엔 보이지 않음 */
