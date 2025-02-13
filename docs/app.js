@@ -14,10 +14,7 @@ fetch("/api/key")
   })
   .then((data) => {
     if (!data.clientId) throw new Error("API Key is missing");
-
     console.log("✅ 네이버 API Key 로드 성공");
-
-    // 네이버 지도 API 스크립트 동적 로드
     const script = document.createElement("script");
     script.type = "text/javascript";
     script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${data.clientId}`;
@@ -34,17 +31,13 @@ fetch("/api/kakao-key")
   })
   .then((data) => {
     if (!data.kakaoApiKey) throw new Error("Kakao API Key is missing");
-
     console.log("✅ 카카오 API Key 로드 성공");
-
-    // 카카오 지도 API 스크립트 동적 로드 (autoload=false 옵션 추가)
     const script = document.createElement("script");
-    script.async = false; // 동기 로드
+    script.async = false;
     script.defer = false;
     script.type = "text/javascript";
     script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${data.kakaoApiKey}&libraries=services&autoload=false`;
     script.onload = function () {
-      // SDK 초기화를 명시적으로 진행
       kakao.maps.load(function () {
         console.log("✅ Kakao Maps SDK 완전 초기화됨!");
         initKakaoMap();
@@ -84,10 +77,8 @@ function initMap() {
     center: new naver.maps.LatLng(37.3595704, 127.105399),
     zoom: 10,
   };
-
   map = new naver.maps.Map("map", mapOptions);
   console.log("✅ 네이버 지도 초기화 완료");
-
   if (markerData.length > 0) {
     addMarkers();
   }
@@ -97,10 +88,8 @@ function initMap() {
 function addMarkers() {
   let markerList = [];
   let infowindowList = [];
-
   markerData.forEach((location) => {
     let latlng = new naver.maps.LatLng(location.lat, location.lng);
-
     let marker = new naver.maps.Marker({
       map: map,
       position: latlng,
@@ -109,23 +98,19 @@ function addMarkers() {
         anchor: new naver.maps.Point(12, 12),
       },
     });
-
     let content = `<div class='infowindow_wrap'>
       <div class='infowindow_title'>${location.title}</div>
       <div class='infowindow_content'>${location.content}</div>
       <div class='infowindow_createdTime'>${location.createdTime}</div>
     </div>`;
-
     let infowindow = new naver.maps.InfoWindow({
       content: content,
       backgroundColor: "rgba(255, 255, 255, 0.9)",
       borderColor: "#ccc",
       anchorSize: new naver.maps.Size(10, 10),
     });
-
     markerList.push(marker);
     infowindowList.push(infowindow);
-
     naver.maps.Event.addListener(marker, "click", () => {
       if (infowindow.getMap()) {
         infowindow.close();
@@ -135,9 +120,7 @@ function addMarkers() {
       }
     });
   });
-
   naver.maps.Event.addListener(map, "click", closeAllInfoWindows);
-
   function closeAllInfoWindows() {
     infowindowList.forEach((infowindow) => infowindow.close());
   }
@@ -151,11 +134,9 @@ $("#current").click(() => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         const latlng = new naver.maps.LatLng(lat, lng);
-
         if (window.currentLocationMarker) {
           window.currentLocationMarker.setMap(null);
         }
-
         window.currentLocationMarker = new naver.maps.Marker({
           position: latlng,
           map: map,
@@ -164,7 +145,6 @@ $("#current").click(() => {
             anchor: new naver.maps.Point(11, 11),
           },
         });
-
         map.setZoom(14, false);
         map.panTo(latlng);
       },
@@ -179,16 +159,14 @@ $("#current").click(() => {
   }
 });
 
-/* 8. 검색 기능 */
+/* 8. 검색 기능 - 입력값을 가져와 Kakao Places 검색 요청 */
 function searchHandler() {
   let content = $("#search_input").val().trim();
   if (!content) {
     alert("검색어를 입력하세요.");
     return;
   }
-
   console.log("🔍 검색 요청:", content);
-
   if (window.search_loc) {
     window.search_loc.keywordSearch(content, searchPlace);
   } else {
@@ -207,7 +185,6 @@ $("#search_btn").on("click", function () {
 
 /* 기존 검색 마커 및 인포윈도우 제거 */
 function clearSearchMarkers() {
-  // 먼저 모든 인포윈도우를 닫습니다.
   searchInfoWindows.forEach((iw) => {
     iw.close();
   });
@@ -220,24 +197,22 @@ function clearSearchMarkers() {
   }
 }
 
-/* 9. Kakao 검색 결과 처리 및 네이버 지도에 표시 */
+/* 9. Kakao 검색 결과 처리 및 지도와 목록에 표출 */
 function searchPlace(data, status, pagination) {
   console.log("📌 searchPlace 함수 호출됨");
-
   if (status === kakao.maps.services.Status.OK) {
     clearSearchMarkers();
-
-    // 네이버 지도용 LatLngBounds 생성 (검색 결과 모두 보이도록)
+    // 목록 초기화
+    const listEl = document.getElementById("placesList");
+    if (listEl) listEl.innerHTML = "";
     var bounds = new naver.maps.LatLngBounds();
-
-    data.forEach((place) => {
+    data.forEach(function (place, i) {
       console.log("검색된 장소 정보:", place);
-
       var position = new naver.maps.LatLng(
         parseFloat(place.y),
         parseFloat(place.x)
       );
-
+      // 검색 결과 마커 생성 (Naver Map)
       var marker = new naver.maps.Marker({
         map: map,
         position: position,
@@ -247,7 +222,7 @@ function searchPlace(data, status, pagination) {
         },
       });
       searchMarkers.push(marker);
-
+      // 인포윈도우 생성
       var content = `<div class='infowindow_wrap'>
           <div class='infowindow_title'>${place.place_name}</div>
           <div class='infowindow_content'>${place.address_name}</div>
@@ -255,7 +230,6 @@ function searchPlace(data, status, pagination) {
             place.phone ? place.phone : "전화번호 정보 없음"
           }</div>
         </div>`;
-
       var infowindow = new naver.maps.InfoWindow({
         content: content,
         backgroundColor: "rgba(255, 255, 255, 0.9)",
@@ -263,8 +237,7 @@ function searchPlace(data, status, pagination) {
         anchorSize: new naver.maps.Size(10, 10),
       });
       searchInfoWindows.push(infowindow);
-
-      // 검색 마커 클릭 시 인포윈도우 토글 처리
+      // 검색 마커 클릭 시 토글 처리
       naver.maps.Event.addListener(marker, "click", function () {
         if (infowindow.getMap()) {
           infowindow.close();
@@ -273,21 +246,75 @@ function searchPlace(data, status, pagination) {
           infowindow.open(map, marker);
         }
       });
-
+      // 결과 목록에 항목 추가 (공식 예제 참고)
+      if (listEl) {
+        var itemEl = document.createElement("li");
+        itemEl.className = "item";
+        var itemStr =
+          '<span class="markerbg marker_' +
+          (i + 1) +
+          '"></span>' +
+          '<div class="info">' +
+          "<h5>" +
+          place.place_name +
+          "</h5>";
+        if (place.road_address_name) {
+          itemStr +=
+            "<span>" +
+            place.road_address_name +
+            "</span>" +
+            '<span class="jibun gray">' +
+            place.address_name +
+            "</span>";
+        } else {
+          itemStr += "<span>" + place.address_name + "</span>";
+        }
+        itemStr +=
+          "<span class='tel'>" + (place.phone || "") + "</span>" + "</div>";
+        itemEl.innerHTML = itemStr;
+        // 마우스오버 시 해당 마커의 인포윈도우 표출
+        itemEl.onmouseover = function () {
+          infowindow.open(map, marker);
+        };
+        itemEl.onmouseout = function () {
+          infowindow.close();
+        };
+        listEl.appendChild(itemEl);
+      }
       bounds.extend(position);
     });
-
-    // 지도 클릭 시에도 검색 인포윈도우 닫기
-    naver.maps.Event.addListener(map, "click", function () {
-      searchInfoWindows.forEach((iw) => iw.close());
-    });
-
     map.fitBounds(bounds);
+    displayPagination(pagination);
   } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
-    console.warn("⚠️ 검색 결과 없음");
-    alert("검색 결과가 없습니다.");
+    alert("검색 결과가 존재하지 않습니다.");
+    return;
   } else {
-    console.error("❌ 검색 오류 발생:", status);
-    alert("검색 중 오류가 발생했습니다.");
+    alert("검색 결과 중 오류가 발생했습니다.");
+    return;
   }
+}
+
+/* 10. 페이지네이션 표시 (공식 예제 참고) */
+function displayPagination(pagination) {
+  var paginationEl = document.getElementById("pagination"),
+    fragment = document.createDocumentFragment();
+  while (paginationEl.hasChildNodes()) {
+    paginationEl.removeChild(paginationEl.lastChild);
+  }
+  for (var i = 1; i <= pagination.last; i++) {
+    var el = document.createElement("a");
+    el.href = "#";
+    el.innerHTML = i;
+    if (i === pagination.current) {
+      el.className = "on";
+    } else {
+      el.onclick = (function (i) {
+        return function () {
+          pagination.gotoPage(i);
+        };
+      })(i);
+    }
+    fragment.appendChild(el);
+  }
+  paginationEl.appendChild(fragment);
 }
