@@ -216,23 +216,27 @@ function clearSearchMarkers() {
   }
 }
 
-/* Kakao 검색 결과 처리 및 네이버 지도에 표시 */
+/* 9. Kakao 검색 결과 처리 및 네이버 지도에 표시 */
 function searchPlace(data, status, pagination) {
   console.log("📌 searchPlace 함수 호출됨");
 
   if (status === kakao.maps.services.Status.OK) {
     clearSearchMarkers();
 
-    // 네이버 지도용 LatLngBounds 생성
+    // 네이버 지도용 LatLngBounds 생성 (검색 결과 모두 보이도록)
     var bounds = new naver.maps.LatLngBounds();
 
     data.forEach((place) => {
-      // 카카오 API 결과: place.y(위도), place.x(경도)
+      // 콘솔에 각 장소 정보를 출력
+      console.log("검색된 장소 정보:", place);
+
+      // Kakao API 결과: place.y(위도), place.x(경도)
       var position = new naver.maps.LatLng(
         parseFloat(place.y),
         parseFloat(place.x)
       );
 
+      // 검색 결과 마커 생성 (검색 결과용 마커는 .search-marker 클래스를 사용)
       var marker = new naver.maps.Marker({
         map: map,
         position: position,
@@ -243,14 +247,24 @@ function searchPlace(data, status, pagination) {
       });
       searchMarkers.push(marker);
 
+      // 인포윈도우 내용 구성 (장소 정보 포함)
+      var content = `<div class='infowindow_wrap'>
+          <div class='infowindow_title'>${place.place_name}</div>
+          <div class='infowindow_content'>${place.address_name}</div>
+          <div class='infowindow_phone'>${
+            place.phone ? place.phone : "전화번호 정보 없음"
+          }</div>
+        </div>`;
+
       var infowindow = new naver.maps.InfoWindow({
-        content: `<div style="padding:5px;font-size:12px;">${place.place_name}</div>`,
+        content: content,
         backgroundColor: "rgba(255, 255, 255, 0.9)",
         borderColor: "#ccc",
         anchorSize: new naver.maps.Size(10, 10),
       });
       searchInfoWindows.push(infowindow);
 
+      // 마커 클릭 시 해당 인포윈도우 열기
       naver.maps.Event.addListener(marker, "click", function () {
         searchInfoWindows.forEach((iw) => {
           iw.close();
@@ -261,7 +275,7 @@ function searchPlace(data, status, pagination) {
       bounds.extend(position);
     });
 
-    // 검색 결과가 모두 보이도록 지도 범위 조정
+    // 모든 검색 결과가 보이도록 지도 범위 조정
     map.fitBounds(bounds);
   } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
     console.warn("⚠️ 검색 결과 없음");
