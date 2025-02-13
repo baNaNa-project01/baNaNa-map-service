@@ -12,22 +12,19 @@
     ></script>
   </head>
   <body>
-    <!-- 배너 -->
-    <div id="navbar">TourMap</div>
-
-    <!-- 오늘 날짜 박스 (추후 기능 구현) -->
-    <div id="infoBox">
-      <div id="infoTitle">오늘 날짜</div>
-      <div id="infoContent">2025.02.12</div>
+    <!-- 네비게이션 배너: 로고와 오늘 날짜(텍스트 inline) -->
+    <div id="navbar">
+      <span class="logo">TourMap</span>
+      <span id="todayDate">2025.02.12</span>
     </div>
 
-    <!-- 검색창 (키워드 검색) -->
+    <!-- 검색창: 화면 최상단 중앙에 넓게 배치 -->
     <div id="search">
       <input id="search_input" placeholder="어디로 갈까?" />
       <button id="search_btn">검색</button>
     </div>
 
-    <!-- 카테고리 섹션 (버튼 형식) -->
+    <!-- 카테고리 섹션: 검색창 바로 아래 중앙에 배치 -->
     <div id="category_section">
       <h3>카테고리 검색</h3>
       <div id="category_buttons">
@@ -56,20 +53,17 @@
       </div>
     </div>
 
-    <!-- 기존 옵션박스형 카테고리 영역은 숨김 -->
-    <div id="category_search" style="display: none"></div>
+    <!-- 현재 위치 버튼: 네비게이션 아래 좌측에 배치 -->
+    <div id="current">현재 위치</div>
 
-    <!-- 검색 결과 목록 (검색 전엔 숨김 처리) -->
+    <!-- 검색 결과 목록: 현재 위치 버튼 바로 아래 좌측에 고정 -->
     <div id="menu_wrap">
       <ul id="placesList"></ul>
       <div id="pagination"></div>
     </div>
 
-    <!-- 현재 위치 버튼 -->
-    <div id="current">현재 위치</div>
-
     <!-- 지도 영역 -->
-    <div id="map" style="width: 100%; height: 100vh"></div>
+    <div id="map"></div>
     <script src="app.js"></script>
   </body>
 </html>
