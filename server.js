@@ -10,7 +10,7 @@ const port = 3000;
 // CORS 설정
 app.use(cors());
 
-// 정적 파일 제공 (docs 폴더 내 파일 제공)
+// 정적 파일 제공 (docs 폴더 내 정적 파일)
 app.use(express.static(path.join(__dirname, "docs")));
 
 // 네이버 지도 API 키 제공 엔드포인트
@@ -20,6 +20,17 @@ app.get("/api/key", (req, res) => {
     return res.status(500).json({ error: "API Key is missing in server" });
   }
   res.json({ clientId });
+});
+
+// 카카오 키 제공 엔드포인트
+app.get("/api/kakao-key", (req, res) => {
+  const kakaoApiKey = process.env.KAKAO_APIKEY;
+  if (!kakaoApiKey) {
+    return res
+      .status(500)
+      .json({ error: "Kakao API Key is missing in server" });
+  }
+  res.json({ kakaoApiKey });
 });
 
 // 관광 데이터 제공 API
@@ -42,7 +53,7 @@ app.get("/api/data", (req, res) => {
   ]);
 });
 
-// 기본 페이지 라우팅
+// 기본 페이지 라우팅 (docs 폴더 내 tourMaps.html)
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "docs", "tourMaps.html"));
 });
