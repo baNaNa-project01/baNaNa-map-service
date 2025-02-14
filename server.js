@@ -136,6 +136,29 @@ app.get("/api/location-tour-info", async (req, res) => {
   }
 });
 
+// TourAPI: 상세 관광정보 조회 엔드포인트
+app.get("/api/detail-intro", async (req, res) => {
+  const { contentId, contentTypeId } = req.query;
+  const tourAPIKey = process.env.TOUR_API;
+  if (!tourAPIKey) {
+    return res
+      .status(500)
+      .json({ error: "Tour API Key is missing in server (.env 파일 확인)" });
+  }
+  // _type=json 를 제거하면 기본 XML로 응답됨 (예시 응답 참고)
+  const url = `https://apis.data.go.kr/B551011/KorService1/detailIntro1?MobileOS=ETC&MobileApp=ETC&contentId=${contentId}&contentTypeId=${contentTypeId}&serviceKey=${tourAPIKey}`;
+  try {
+    const response = await fetch(url);
+    // XML로 반환되므로 텍스트로 받아 클라이언트에 그대로 전송
+    const text = await response.text();
+    console.log("✅ 상세 관광정보 로드 성공:", text);
+    res.send(text);
+  } catch (error) {
+    console.error("❌ 상세 관광정보 호출 실패:", error);
+    res.status(500).json({ error: "상세 관광정보 호출 실패" });
+  }
+});
+
 // 관광 데이터 제공 API (예시 데이터)
 app.get("/api/data", (req, res) => {
   res.json([
