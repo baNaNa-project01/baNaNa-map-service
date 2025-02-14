@@ -1,10 +1,21 @@
-// app.js
+// =================== 기존 지도/검색 관련 코드 시작 ===================
 
-// 지도 객체와 전역 변수들
+// 전역 변수 선언
 let map;
 let markerData = [];
 let searchMarkers = [];
 let searchInfoWindows = [];
+
+// 기존 TourAPI 데이터 불러오기 테스트 (콘솔 로그용)
+fetch("/api/tour-data")
+  .then((res) => res.json())
+  .then((data) => {
+    console.log("TourAPI 데이터 (예시):", data);
+    // 이후 데이터를 지도나 UI에 활용할 수 있습니다.
+  })
+  .catch((error) => {
+    console.error("TourAPI 데이터 불러오기 실패:", error);
+  });
 
 /* 1. 네이버 지도 API 키 가져오기 및 스크립트 로드 */
 fetch("/api/key")
@@ -58,7 +69,7 @@ function initKakaoMap() {
   }
 }
 
-/* 4. 관광 데이터 가져오기 */
+/* 4. 관광 데이터 가져오기 (기존 /api/data 엔드포인트) */
 fetch("/api/data")
   .then((response) => response.json())
   .then((data) => {
@@ -94,15 +105,16 @@ function addMarkers() {
       map: map,
       position: latlng,
       icon: {
-        content: `<div class='marker'></div>`,
+        content: "<div class='marker'></div>",
         anchor: new naver.maps.Point(12, 12),
       },
     });
-    let content = `<div class='infowindow_wrap'>
-      <div class='infowindow_title'>${location.title}</div>
-      <div class='infowindow_content'>${location.content}</div>
-      <div class='infowindow_createdTime'>${location.createdTime}</div>
-    </div>`;
+    let content = `
+      <div class="infowindow_wrap">
+        <div class="infowindow_title">${location.title}</div>
+        <div class="infowindow_content">${location.content}</div>
+        <div class="infowindow_createdTime">${location.createdTime}</div>
+      </div>`;
     let infowindow = new naver.maps.InfoWindow({
       content: content,
       backgroundColor: "rgba(255, 255, 255, 0.9)",
@@ -159,7 +171,7 @@ $("#current").click(() => {
   }
 });
 
-/* 8. 키워드 검색 기능 - 입력값을 가져와 Kakao Places 키워드 검색 요청 (현재 지도 영역 내 검색) */
+/* 8. 키워드 검색 기능 (Kakao Places) */
 function searchHandler() {
   let content = $("#search_input").val().trim();
   if (!content) {
@@ -218,15 +230,16 @@ function searchPlace(data, status, pagination) {
         map: map,
         position: position,
         icon: {
-          content: `<div class='search-marker'></div>`,
+          content: "<div class='search-marker'></div>",
           anchor: new naver.maps.Point(12, 12),
         },
       });
       searchMarkers.push(marker);
-      var content = `<div class='infowindow_wrap'>
-          <div class='infowindow_title'>${place.place_name}</div>
-          <div class='infowindow_content'>${place.address_name}</div>
-          <div class='infowindow_phone'>${
+      var content = `
+        <div class="infowindow_wrap">
+          <div class="infowindow_title">${place.place_name}</div>
+          <div class="infowindow_content">${place.address_name}</div>
+          <div class="infowindow_phone">${
             place.phone ? place.phone : "전화번호 정보 없음"
           }</div>
         </div>`;
@@ -292,126 +305,7 @@ function searchPlace(data, status, pagination) {
   }
 }
 
-/* 11. 카테고리 검색 기능 */
-function searchByCategory(categoryCode) {
-  if (!categoryCode) {
-    alert("카테고리를 선택해주세요.");
-    return;
-  }
-  console.log("🔍 카테고리 검색 요청:", categoryCode);
-  if (window.search_loc) {
-    // Naver 지도에서 현재 보이는 영역의 경계 구하기
-    const naverBounds = map.getBounds();
-    const sw = naverBounds.getSW();
-    const ne = naverBounds.getNE();
-    // Kakao 지도 객체의 LatLng로 변환
-    const kakaoSw = new kakao.maps.LatLng(sw.lat(), sw.lng());
-    const kakaoNe = new kakao.maps.LatLng(ne.lat(), ne.lng());
-    // Kakao의 LatLngBounds 객체 생성
-    const kakaoBounds = new kakao.maps.LatLngBounds(kakaoSw, kakaoNe);
-
-    // categorySearch 시 bounds 옵션에 kakaoBounds 객체를 넘김
-    window.search_loc.categorySearch(categoryCode, categorySearchCB, {
-      bounds: kakaoBounds,
-    });
-  } else {
-    console.error("❌ Kakao search service is not initialized yet.");
-  }
-}
-
-function categorySearchCB(data, status, pagination) {
-  console.log("📌 categorySearchCB 호출됨");
-  if (status === kakao.maps.services.Status.OK) {
-    clearSearchMarkers();
-    const listEl = document.getElementById("placesList");
-    if (listEl) listEl.innerHTML = "";
-    document.getElementById("menu_wrap").style.display = "block";
-    var bounds = new naver.maps.LatLngBounds();
-    data.forEach(function (place, i) {
-      console.log("검색된 장소 정보:", place);
-      var position = new naver.maps.LatLng(
-        parseFloat(place.y),
-        parseFloat(place.x)
-      );
-      var marker = new naver.maps.Marker({
-        map: map,
-        position: position,
-        icon: {
-          content: `<div class='search-marker'></div>`,
-          anchor: new naver.maps.Point(12, 12),
-        },
-      });
-      searchMarkers.push(marker);
-      var content = `<div class='infowindow_wrap'>
-          <div class='infowindow_title'>${place.place_name}</div>
-          <div class='infowindow_content'>${place.address_name}</div>
-          <div class='infowindow_phone'>${
-            place.phone ? place.phone : "전화번호 정보 없음"
-          }</div>
-        </div>`;
-      var infowindow = new naver.maps.InfoWindow({
-        content: content,
-        backgroundColor: "rgba(255, 255, 255, 0.9)",
-        borderColor: "#ccc",
-        anchorSize: new naver.maps.Size(10, 10),
-      });
-      searchInfoWindows.push(infowindow);
-      naver.maps.Event.addListener(marker, "click", function () {
-        if (infowindow.getMap()) {
-          infowindow.close();
-        } else {
-          searchInfoWindows.forEach((iw) => iw.close());
-          infowindow.open(map, marker);
-        }
-      });
-      if (listEl) {
-        var itemEl = document.createElement("li");
-        itemEl.className = "item";
-        var itemStr =
-          '<span class="markerbg marker_' +
-          (i + 1) +
-          '"></span>' +
-          '<div class="info">' +
-          "<h5>" +
-          place.place_name +
-          "</h5>" +
-          (place.road_address_name
-            ? "<span>" +
-              place.road_address_name +
-              "</span><br><span class='jibun gray'>" +
-              place.address_name +
-              "</span><br>"
-            : "<span>" + place.address_name + "</span><br>") +
-          "<span class='tel'>" +
-          (place.phone || "") +
-          "</span>" +
-          "</div>";
-        itemEl.innerHTML = itemStr;
-        itemEl.onclick = function () {
-          searchInfoWindows.forEach((iw) => iw.close());
-          infowindow.open(map, marker);
-          map.panTo(position);
-        };
-        listEl.appendChild(itemEl);
-      }
-      bounds.extend(position);
-    });
-    map.fitBounds(bounds);
-    naver.maps.Event.addListener(map, "click", function () {
-      searchInfoWindows.forEach((iw) => iw.close());
-    });
-    displayPagination(pagination);
-  } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
-    alert("검색 결과가 존재하지 않습니다.");
-    document.getElementById("menu_wrap").style.display = "none";
-    return;
-  } else {
-    alert("검색 결과 중 오류가 발생했습니다.");
-    return;
-  }
-}
-
-/* 12. 페이지네이션 표시 (공식 예제 참고) */
+/* 11. 페이지네이션 표시 (공식 예제 참고) */
 function displayPagination(pagination) {
   var paginationEl = document.getElementById("pagination"),
     fragment = document.createDocumentFragment();
@@ -436,8 +330,173 @@ function displayPagination(pagination) {
   paginationEl.appendChild(fragment);
 }
 
-/* 13. 카테고리 버튼 클릭 이벤트 (옵션박스 대신 버튼으로 처리) */
+/* 12. 카테고리 버튼 클릭 이벤트 (옵션박스 대신 버튼으로 처리) */
 $(document).on("click", ".category-btn", function () {
   var catCode = $(this).data("cat");
   searchByCategory(catCode);
+});
+
+// =================== 기존 지도/검색 관련 코드 끝 ===================
+
+// =================== TourAPI 관련 UI/기능 코드 ===================
+// DOMContentLoaded 이벤트를 사용하여 DOM 요소들이 모두 로드된 후에 실행합니다.
+window.addEventListener("DOMContentLoaded", () => {
+  // TourAPI 관련 DOM 요소 선택
+  const dataDisplay = document.getElementById("data");
+  const checkRegionCodeButton = document.getElementById("checkRegionCode");
+  const checkDetailRegionCodeButton = document.getElementById(
+    "checkDetailRegionCode"
+  );
+  const detailRegionSelect = document.getElementById("detailRegionSelect");
+  const detailRegionIndexSelect = document.getElementById(
+    "detailRegionIndexSelect"
+  );
+  const detaildetailRegionIndexSelect = document.getElementById(
+    "detaildetailRegionIndexSelect"
+  );
+  const searchButton = document.getElementById("searchButton");
+  const locationsearchButton = document.getElementById("locationsearchButton");
+
+  // ***** 세부 지역 및 시군구 옵션박스 초기화 *****
+  // 예시 코드에 있는 지역 코드 목록과 이름 매핑
+  const detailRegionCodes = [
+    1, 2, 3, 4, 5, 6, 7, 8, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+  ];
+  const detailRegionNames = {
+    1: "서울",
+    2: "인천",
+    3: "대전",
+    4: "대구",
+    5: "광주",
+    6: "부산",
+    7: "울산",
+    8: "세종",
+    31: "경기",
+    32: "강원",
+    33: "충북",
+    34: "충남",
+    35: "경북",
+    36: "경남",
+    37: "전북",
+    38: "전남",
+    39: "제주",
+  };
+
+  // detailRegionSelect와 detailRegionIndexSelect 옵션 채우기
+  detailRegionCodes.forEach((code) => {
+    const option = document.createElement("option");
+    option.value = code;
+    option.text = `${detailRegionNames[code]} - ${code}`;
+    detailRegionSelect.appendChild(option);
+
+    const indexOption = document.createElement("option");
+    indexOption.value = code;
+    indexOption.text = `${detailRegionNames[code]} - ${code}`;
+    detailRegionIndexSelect.appendChild(indexOption);
+  });
+
+  // 세부 지역(시군구) 데이터를 채우는 함수 (기존 함수 재사용)
+  function populateSigunguSelect(areaCode) {
+    const detailUrl = `/api/detail-region?areaCode=${areaCode}`;
+    fetch(detailUrl)
+      .then((res) => res.json())
+      .then((myJson) => {
+        // 시군구 셀렉트 박스 초기화
+        detaildetailRegionIndexSelect.innerHTML = "";
+
+        const items = myJson.response.body.items.item;
+        const itemArray = Array.isArray(items) ? items : [items];
+
+        if (!itemArray[0]) {
+          const option = document.createElement("option");
+          option.value = "";
+          option.text = `해당 지역에 시군구 정보가 없습니다.`;
+          detaildetailRegionIndexSelect.appendChild(option);
+        } else {
+          itemArray.forEach((item) => {
+            const option = document.createElement("option");
+            option.value = item.code;
+            option.text = item.name;
+            detaildetailRegionIndexSelect.appendChild(option);
+          });
+        }
+      });
+  }
+
+  // detailRegionIndexSelect가 변경될 때 시군구 옵션 업데이트
+  detailRegionIndexSelect.addEventListener("change", () => {
+    const selectedCode = detailRegionIndexSelect.value;
+    populateSigunguSelect(selectedCode);
+  });
+
+  // 초기에는 서울(코드 1)로 시군구 데이터 로드
+  populateSigunguSelect(1);
+
+  // ***** TourAPI 관련 이벤트 핸들러 *****
+
+  // 도별 지역 코드 조회
+  const tourRegionCodeURL = `/api/region-code`;
+  checkRegionCodeButton.addEventListener("click", () => {
+    fetch(tourRegionCodeURL)
+      .then((res) => res.json())
+      .then((myJson) => {
+        dataDisplay.innerText = JSON.stringify(myJson, null, 2);
+      })
+      .catch((error) => {
+        dataDisplay.innerText = "Error fetching data: " + error;
+      });
+  });
+
+  // 세부 지역 코드 조회 (선택한 도의 코드 전달)
+  checkDetailRegionCodeButton.addEventListener("click", () => {
+    const selectedAreaCode = detailRegionSelect.value;
+    const detailRegionURL = `/api/detail-region?areaCode=${selectedAreaCode}`;
+    fetch(detailRegionURL)
+      .then((res) => res.json())
+      .then((myJson) => {
+        dataDisplay.innerText = JSON.stringify(myJson, null, 2);
+      })
+      .catch((error) => {
+        dataDisplay.innerText = "Error fetching data: " + error;
+      });
+  });
+
+  // 지역 기반 관광정보 조회 (선택한 도와 시군구 코드 전달)
+  searchButton.addEventListener("click", () => {
+    const areaCode = detailRegionIndexSelect.value;
+    const sigunguCode = detaildetailRegionIndexSelect.value;
+    const regionTourInfoURL = `/api/region-tour-info?areaCode=${areaCode}&sigunguCode=${sigunguCode}`;
+    fetch(regionTourInfoURL)
+      .then((res) => res.json())
+      .then((myJson) => {
+        dataDisplay.innerText = JSON.stringify(myJson, null, 2);
+      })
+      .catch((error) => {
+        dataDisplay.innerText = "Error fetching data: " + error;
+      });
+  });
+
+  // 위치 기반 관광정보 조회 (위도, 경도, 반경 전달)
+  locationsearchButton.addEventListener("click", () => {
+    const latitude = document.getElementById("latitude").value;
+    const longitude = document.getElementById("longitude").value;
+    const radius = document.getElementById("radius").value;
+    const locationTourInfoURL = `/api/location-tour-info?mapX=${longitude}&mapY=${latitude}&radius=${radius}`;
+    fetch(locationTourInfoURL)
+      .then((res) => res.text())
+      .then((data) => {
+        try {
+          const jsonData = JSON.parse(data);
+          dataDisplay.innerText = JSON.stringify(jsonData, null, 2);
+        } catch (e) {
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(data, "text/xml");
+          console.log(xmlDoc);
+          dataDisplay.innerText = data;
+        }
+      })
+      .catch((error) => {
+        dataDisplay.innerText = "Error fetching data: " + error;
+      });
+  });
 });
