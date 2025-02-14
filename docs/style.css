@@ -7,7 +7,8 @@ body {
 
 /* 네비게이션 배너: 상단 고정 */
 #navbar {
-  position: fixed;
+  /* position: fixed;  제거 */
+  position: relative; /* 또는 그냥 기본(static) 사용 */
   top: 0;
   left: 0;
   width: 100%;
@@ -17,7 +18,7 @@ body {
   align-items: center;
   padding: 0 20px;
   box-sizing: border-box;
-  z-index: 10000;
+  /* z-index는 필요에 따라 제거 */
 }
 #navbar .logo {
   font-weight: bolder;
@@ -30,22 +31,21 @@ body {
   color: rgb(22, 19, 19);
 }
 
-/* 검색창: 최상단 중앙에 넓게 배치 */
+/* 검색창: 고정 속성 제거 */
 #search {
-  position: fixed;
-  top: 60px;
+  position: absolute;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
   width: 60%;
   max-width: 800px;
   display: flex;
   box-sizing: border-box;
-  z-index: 10000;
-  border-radius: 30px; /* 전체 컨테이너의 모서리를 둥글게 */
-  overflow: hidden; /* 내부 요소들이 둥근 모서리를 침범하지 않도록 */
+  border-radius: 30px;
+  overflow: hidden;
+  z-index: 1000;
 }
-
-/* 입력창은 왼쪽 모서리만 둥글게 */
+/* 검색 입력창 & 버튼 스타일은 그대로 유지 */
 #search_input {
   flex: 1;
   padding: 10px;
@@ -54,12 +54,11 @@ body {
   background-color: #333;
   color: #fff;
   box-sizing: border-box;
-  border-radius: 30px 0 0 30px; /* 좌측 모서리 둥글게 */
+  border-radius: 30px 0 0 30px;
 }
 #search_input::placeholder {
-  color: #fff; /* placeholder 흰색 */
+  color: #fff;
 }
-/* 검색 버튼은 오른쪽 모서리만 둥글게 */
 #search_btn {
   padding: 10px 20px;
   font-size: 16px;
@@ -68,7 +67,7 @@ body {
   cursor: pointer;
   font-weight: bold;
   transition: background 0.3s;
-  border-radius: 0 30px 30px 0; /* 우측 모서리 둥글게 */
+  border-radius: 0 30px 30px 0;
 }
 #search_btn:hover {
   background: #e6d31a;
@@ -115,20 +114,19 @@ body {
   background: #f0f0f0;
 }
 
-/* 현재 위치 버튼: 네비게이션 아래 좌측에 배치 */
+/* 현재 위치 버튼: 고정 속성 제거 */
 #current {
-  position: fixed;
-  top: 70px;
-  left: 20px;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 5px 10px; /* 가로 길이 축소 */
   background: rgb(50, 205, 50);
-  padding: 10px 15px;
   border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 4px;
   font-weight: bolder;
   cursor: pointer;
-  z-index: 10000;
+  z-index: 1000;
 }
-
 /* 현재 위치 아이콘의 애니메이션 (red pulse) */
 .myloc {
   display: block;
@@ -142,10 +140,9 @@ body {
 
 /* 검색 결과 목록 창: 현재 위치 버튼 바로 아래 좌측에 고정 */
 #menu_wrap {
-  position: fixed;
-  top: 120px;
-  left: 20px;
-  z-index: 10000;
+  /* position: fixed;  제거 */
+  position: relative;
+  margin: 10px 20px;
   display: none; /* 검색 전엔 숨김 */
   background: rgba(255, 255, 255, 0.9);
   width: 300px;
@@ -191,7 +188,7 @@ body {
   z-index: 1;
 }
 
-/* 데이터 영역 (지도 아래) */
+/* 데이터 영역 (지도 아래) - TourAPI 관련 UI */
 #data_container {
   display: flex;
   width: 100%;
@@ -199,7 +196,7 @@ body {
   box-sizing: border-box;
 }
 
-/* 관광 데이터 리스트 (좌측 3/4) */
+/* 관광 데이터 리스트 (좌측 3/4; 추후 TourAPI 데이터를 활용할 수 있음) */
 #tour_data_list {
   width: 75%;
   padding: 10px;
