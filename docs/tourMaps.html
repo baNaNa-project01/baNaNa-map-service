@@ -68,6 +68,67 @@
       </div>
     </div>
 
+    <!-- 추가됨: 지도 아래 신규 지역 기반 관광정보 UI -->
+    <div id="regionTourUI">
+      <div class="row">
+        <span>지역 선택: </span>
+        <!-- 도별 코드 버튼들 (정적 HTML) -->
+        <button class="region-btn" data-code="1">서울 (1)</button>
+        <button class="region-btn" data-code="2">인천 (2)</button>
+        <button class="region-btn" data-code="3">대전 (3)</button>
+        <button class="region-btn" data-code="4">대구 (4)</button>
+        <button class="region-btn" data-code="5">광주 (5)</button>
+        <button class="region-btn" data-code="6">부산 (6)</button>
+        <button class="region-btn" data-code="7">울산 (7)</button>
+        <button class="region-btn" data-code="8">세종 (8)</button>
+        <button class="region-btn" data-code="31">경기 (31)</button>
+        <button class="region-btn" data-code="32">강원 (32)</button>
+        <button class="region-btn" data-code="33">충북 (33)</button>
+        <button class="region-btn" data-code="34">충남 (34)</button>
+        <button class="region-btn" data-code="35">경북 (35)</button>
+        <button class="region-btn" data-code="36">경남 (36)</button>
+        <button class="region-btn" data-code="37">전북 (37)</button>
+        <button class="region-btn" data-code="38">전남 (38)</button>
+        <button class="region-btn" data-code="39">제주 (39)</button>
+      </div>
+      <div class="row">
+        <span>세부 지역 선택: </span>
+        <!-- 기존 드롭다운 대신 동적으로 버튼 생성 -->
+        <div id="sigunguButtonsContainer"></div>
+      </div>
+      <div class="row">
+        <span>관광 타입 선택: </span>
+        <!-- 관광 타입 버튼들 -->
+        <button class="contentType-btn" data-contenttypeid="12">
+          관광지 (12)
+        </button>
+        <button class="contentType-btn" data-contenttypeid="14">
+          문화시설 (14)
+        </button>
+        <button class="contentType-btn" data-contenttypeid="15">
+          행사/공연/축제 (15)
+        </button>
+        <button class="contentType-btn" data-contenttypeid="25">
+          여행코스 (25)
+        </button>
+        <button class="contentType-btn" data-contenttypeid="28">
+          레포츠 (28)
+        </button>
+        <button class="contentType-btn" data-contenttypeid="32">
+          숙박 (32)
+        </button>
+        <button class="contentType-btn" data-contenttypeid="38">
+          쇼핑 (38)
+        </button>
+        <button class="contentType-btn" data-contenttypeid="39">
+          음식점 (39)
+        </button>
+      </div>
+      <div class="row">
+        <button id="regionTourSearchButton">지역기반 관광정보 조회하기</button>
+      </div>
+    </div>
+
     <!-- TourAPI 관련 UI (지도 아래 영역) -->
     <div id="tourapiContainer">
       <h1>TourAPI 지역 코드 조회</h1>
