@@ -364,6 +364,33 @@ body {
   max-height: 400px;
 }
 
+.image-slider {
+  position: relative;
+  text-align: center;
+}
+.image-slider img.slide {
+  width: 100%;
+  max-height: 400px;
+  border-radius: 4px;
+}
+.slider-prev,
+.slider-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.slider-prev {
+  left: 10px;
+}
+.slider-next {
+  right: 10px;
+}
+
 @keyframes pulse {
   0% {
     box-shadow: 0 0 0 0 rgba(204, 49, 44, 0.4);
