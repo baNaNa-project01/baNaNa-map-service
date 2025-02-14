@@ -1153,4 +1153,15 @@ window.addEventListener("DOMContentLoaded", () => {
       paginationContainer.appendChild(pageLink);
     }
   }
+
+  // 지도 유형 전환 버튼 클릭 이벤트 (일반지도, 지형도, 위성지도, 겹쳐보기)
+  $(document).on("click", "#mapTypeControl > button", function (e) {
+    e.preventDefault();
+    const mapTypeId = this.id; // 버튼 id가 "NORMAL", "TERRAIN", 등임
+    if (map && map.getMapTypeId() !== naver.maps.MapTypeId[mapTypeId]) {
+      map.setMapTypeId(naver.maps.MapTypeId[mapTypeId]); // 지도 유형 변경
+      $("#mapTypeControl > button").removeClass("control-on");
+      $(this).addClass("control-on");
+    }
+  });
 });
