@@ -7,8 +7,7 @@ body {
 
 /* 네비게이션 배너: 상단 고정 */
 #navbar {
-  /* position: fixed;  제거 */
-  position: relative; /* 또는 그냥 기본(static) 사용 */
+  position: relative;
   top: 0;
   left: 0;
   width: 100%;
@@ -18,7 +17,6 @@ body {
   align-items: center;
   padding: 0 20px;
   box-sizing: border-box;
-  /* z-index는 필요에 따라 제거 */
 }
 #navbar .logo {
   font-weight: bolder;
@@ -31,7 +29,7 @@ body {
   color: rgb(22, 19, 19);
 }
 
-/* 검색창: 고정 속성 제거 */
+/* 검색창: 지도 내부 중앙 상단 */
 #search {
   position: absolute;
   top: 10px;
@@ -45,7 +43,6 @@ body {
   overflow: hidden;
   z-index: 1000;
 }
-/* 검색 입력창 & 버튼 스타일은 그대로 유지 */
 #search_input {
   flex: 1;
   padding: 10px;
@@ -73,28 +70,24 @@ body {
   background: #e6d31a;
 }
 
-/* 카테고리 섹션: 검색창 바로 아래 중앙에 배치 */
-#category_section {
-  position: fixed;
-  top: 110px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80%;
-  max-width: 800px;
+/* 카테고리 섹션: 지도 내부 우측 상단 */
+#category_list {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 250px;
   background: rgba(255, 255, 255, 0.95);
-  padding: 15px;
+  padding: 10px;
   border: 1px solid #ccc;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  z-index: 10000;
+  z-index: 1000;
   text-align: center;
 }
-#category_section h3 {
+#category_list h3 {
   margin: 0 0 10px;
   font-size: 18px;
 }
-
-/* 카테고리 버튼 스타일 */
 #category_buttons {
   display: flex;
   flex-wrap: wrap;
@@ -114,12 +107,12 @@ body {
   background: #f0f0f0;
 }
 
-/* 현재 위치 버튼: 고정 속성 제거 */
+/* 현재 위치 버튼: 지도 내부 좌측 상단 */
 #current {
   position: absolute;
   top: 10px;
   left: 10px;
-  padding: 5px 10px; /* 가로 길이 축소 */
+  padding: 5px 10px;
   background: rgb(50, 205, 50);
   border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 4px;
@@ -127,7 +120,6 @@ body {
   cursor: pointer;
   z-index: 1000;
 }
-/* 현재 위치 아이콘의 애니메이션 (red pulse) */
 .myloc {
   display: block;
   width: 22px;
@@ -138,12 +130,11 @@ body {
   animation: pulse 1.7s infinite;
 }
 
-/* 검색 결과 목록 창: 현재 위치 버튼 바로 아래 좌측에 고정 */
+/* 검색 결과 목록 창 */
 #menu_wrap {
-  /* position: fixed;  제거 */
   position: relative;
   margin: 10px 20px;
-  display: none; /* 검색 전엔 숨김 */
+  display: none;
   background: rgba(255, 255, 255, 0.9);
   width: 300px;
   max-height: 500px;
@@ -180,7 +171,7 @@ body {
   color: red;
 }
 
-/* 지도 영역: 높이 70vh로 제한하며 내부 요소의 오버레이를 위한 relative 설정 */
+/* 지도 영역 */
 #map {
   position: relative;
   width: 100%;
@@ -188,68 +179,43 @@ body {
   z-index: 1;
 }
 
-/* 데이터 영역 (지도 아래) - TourAPI 관련 UI */
-#data_container {
-  display: flex;
-  width: 100%;
-  height: 30vh; /* 남은 영역 높이 */
-  box-sizing: border-box;
+/* TourAPI 관련 UI (기존) */
+#tourapiContainer {
+  padding: 20px;
 }
 
-/* 관광 데이터 리스트 (좌측 3/4; 추후 TourAPI 데이터를 활용할 수 있음) */
-#tour_data_list {
-  width: 75%;
-  padding: 10px;
-  overflow-y: auto;
+/* 신규: 지역 기반 관광정보 UI 스타일 */
+#regionTourUI {
+  padding: 20px;
   border-top: 1px solid #ccc;
   background: #f9f9f9;
 }
-
-/* 지도 내부에 위치할 카테고리 검색 영역 */
-#category_list {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 250px;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 10px;
+#regionTourUI .row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+#regionTourUI .row span {
+  margin-right: 10px;
+  font-weight: bold;
+}
+#regionTourUI button {
+  margin: 3px;
+  padding: 5px 10px;
   border: 1px solid #ccc;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  text-align: center;
+  background: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.3s;
 }
-
-#category_list h3 {
-  margin: 0 0 10px;
-  font-size: 18px;
+#regionTourUI button:hover {
+  background: #eee;
 }
-
-/* 관광 데이터 마커 스타일 */
-.marker {
-  border: 1px solid black;
-  background: aquamarine;
-  opacity: 0.8;
-  width: 24px;
-  height: 24px;
-  border-radius: 30%;
-  position: relative;
-  z-index: 10;
+#regionTourUI button.active {
+  background: #f8f41a;
+  border-color: #f8f41a;
 }
-
-/* 검색 결과 마커 스타일 */
-.search-marker {
-  border: 1px solid red;
-  background: orange;
-  opacity: 0.8;
-  width: 24px;
-  height: 24px;
-  border-radius: 30%;
-  position: relative;
-  z-index: 10;
-}
-
-/* red pulse 애니메이션 */
 @keyframes pulse {
   0% {
     box-shadow: 0 0 0 0 rgba(204, 49, 44, 0.4);
