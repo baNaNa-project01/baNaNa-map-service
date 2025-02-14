@@ -216,6 +216,19 @@ body {
   background: #f8f41a;
   border-color: #f8f41a;
 }
+
+/* 기존 .marker 와 .search-marker 외에 신규: 지역기반 관광정보 노란 마커 */
+.regionTourMarker {
+  border: 1px solid black;
+  background: yellow;
+  opacity: 0.9;
+  width: 24px;
+  height: 24px;
+  border-radius: 30%;
+  position: relative;
+  z-index: 10;
+}
+
 @keyframes pulse {
   0% {
     box-shadow: 0 0 0 0 rgba(204, 49, 44, 0.4);
