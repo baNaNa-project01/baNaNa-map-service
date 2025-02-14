@@ -968,9 +968,11 @@ window.addEventListener("DOMContentLoaded", () => {
       // 각 아이템 박스 생성 (인포윈도우와 유사한 스타일)
       const div = document.createElement("div");
       div.className = "tour-board-item";
-      // 데이터 속성에 contentId와 contentTypeId 저장 (API에서 받은 필드명에 맞게 수정)
+      // 데이터 속성에 contentId, contentTypeId, 그리고 이미지 URL(첫번째, 두번째)을 저장
       div.setAttribute("data-contentid", item.contentid);
       div.setAttribute("data-contenttypeid", item.contenttypeid);
+      div.setAttribute("data-firstimage", item.firstimage || "");
+      div.setAttribute("data-firstimage2", item.firstimage2 || "");
       div.innerHTML = `
         <div class="board-item-title">${item.title}</div>
         ${
@@ -986,11 +988,13 @@ window.addEventListener("DOMContentLoaded", () => {
           생성일: ${item.createdtime}
         </div>
       `;
-      // 아이템 클릭 시 상세 팝업 표시
+      // 아이템 클릭 시 상세 팝업 표시 (이미지 정보도 함께 전달)
       div.addEventListener("click", () => {
         const contentId = div.getAttribute("data-contentid");
         const contentTypeId = div.getAttribute("data-contenttypeid");
-        showDetailPopup(contentId, contentTypeId);
+        const firstImage = div.getAttribute("data-firstimage");
+        const secondImage = div.getAttribute("data-firstimage2");
+        showDetailPopup(contentId, contentTypeId, firstImage, secondImage);
       });
       boardContainer.appendChild(div);
     });
@@ -998,7 +1002,11 @@ window.addEventListener("DOMContentLoaded", () => {
     renderTourBoardPagination();
   }
 
-  function showDetailPopup(contentId, contentTypeId) {
+  function showDetailPopup(contentId, contentTypeId, firstImage, secondImage) {
+    // 이미지는 게시판에서 가져온 정보를 이용하여 슬라이드 렌더링
+    renderImageSlider(firstImage, secondImage);
+
+    // 상세 텍스트 정보는 기존 detail-intro 엔드포인트에서 가져옵니다.
     fetch(
       `/api/detail-intro?contentId=${contentId}&contentTypeId=${contentTypeId}`
     )
@@ -1020,11 +1028,7 @@ window.addEventListener("DOMContentLoaded", () => {
           detailObj[child.tagName] = child.textContent;
         }
 
-        // 이미지 처리: firstimage 우선, 없으면 firstimage2 사용, 없으면 빈 문자열
-        const imageUrl = detailObj.firstimage || detailObj.firstimage2 || "";
-        document.getElementById("modalImage").src = imageUrl;
-
-        // 상세 정보 표시: contentTypeId에 따른 필드 목록 사용
+        // 콘텐츠 타입별로 미리 정의한 필드 목록을 사용하여 상세 정보 표시 (한글 라벨)
         const fields = detailFields[contentTypeId];
         let detailsHtml = "<ul>";
         if (fields) {
@@ -1034,7 +1038,7 @@ window.addEventListener("DOMContentLoaded", () => {
             }
           }
         } else {
-          // 해당 콘텐츠 타입에 대한 매핑이 없으면 전체 항목을 표시 (값이 있는 것만)
+          // 매핑이 없는 경우, 값이 있는 항목만 출력
           for (const key in detailObj) {
             if (detailObj[key] && detailObj[key].trim() !== "") {
               detailsHtml += `<li><strong>${key}</strong>: ${detailObj[key]}</li>`;
@@ -1044,13 +1048,70 @@ window.addEventListener("DOMContentLoaded", () => {
         detailsHtml += "</ul>";
         document.getElementById("modalDetails").innerHTML = detailsHtml;
 
-        // 모달 표시
+        // 모달 보이기
         document.getElementById("detailModal").style.display = "block";
       })
       .catch((error) => {
         console.error("Error fetching detail intro:", error);
         alert("상세 정보를 불러오는 중 오류가 발생했습니다.");
       });
+  }
+
+  // 이미지 슬라이더 렌더링 함수
+  function renderImageSlider(firstImage, secondImage) {
+    const modalLeft = document.querySelector(".modal-left");
+    modalLeft.innerHTML = ""; // 초기화
+
+    if (firstImage && secondImage) {
+      // 두 이미지 모두 존재하면 슬라이더 생성
+      const slider = document.createElement("div");
+      slider.className = "image-slider";
+
+      const img1 = document.createElement("img");
+      img1.src = firstImage;
+      img1.className = "slide";
+      const img2 = document.createElement("img");
+      img2.src = secondImage;
+      img2.className = "slide";
+      img2.style.display = "none"; // 초기에는 두 번째 이미지 숨김
+
+      slider.appendChild(img1);
+      slider.appendChild(img2);
+
+      // 이전/다음 버튼 생성
+      const prevBtn = document.createElement("button");
+      prevBtn.className = "slider-prev";
+      prevBtn.innerText = "<";
+      const nextBtn = document.createElement("button");
+      nextBtn.className = "slider-next";
+      nextBtn.innerText = ">";
+      slider.appendChild(prevBtn);
+      slider.appendChild(nextBtn);
+
+      let currentSlide = 0;
+      prevBtn.addEventListener("click", () => {
+        const slides = slider.getElementsByClassName("slide");
+        slides[currentSlide].style.display = "none";
+        currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+        slides[currentSlide].style.display = "block";
+      });
+      nextBtn.addEventListener("click", () => {
+        const slides = slider.getElementsByClassName("slide");
+        slides[currentSlide].style.display = "none";
+        currentSlide = (currentSlide + 1) % slides.length;
+        slides[currentSlide].style.display = "block";
+      });
+
+      modalLeft.appendChild(slider);
+    } else if (firstImage) {
+      // 이미지가 하나만 있으면 단일 이미지 표시
+      const img = document.createElement("img");
+      img.src = firstImage;
+      modalLeft.appendChild(img);
+    } else {
+      // 이미지가 없다면 빈 영역 처리
+      modalLeft.innerHTML = "";
+    }
   }
 
   // 모달 닫기 이벤트
