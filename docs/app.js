@@ -15,6 +15,11 @@ let selectedContentTypeId = null;
 let regionTourMarkers = [];
 let regionTourInfoWindows = [];
 
+// 게시판 관련 전역 변수
+let tourBoardData = [];
+let tourBoardCurrentPage = 1;
+const tourBoardItemsPerPage = 15;
+
 // 기존 TourAPI 데이터 불러오기 테스트 (콘솔 로그용)
 fetch("/api/tour-data")
   .then((res) => res.json())
@@ -664,7 +669,7 @@ window.addEventListener("DOMContentLoaded", () => {
             },
           });
           regionTourMarkers.push(marker);
-          // 인포윈도우 내용 구성 (필요 정보: title, addr1, addr2, contenttypeid, createdtime, firstimage, modifiedtime)
+          // 인포윈도우 내용 구성
           const content = `
             <div class="infowindow_wrap">
               <div class="infowindow_title">${item.title}</div>
@@ -687,14 +692,14 @@ window.addEventListener("DOMContentLoaded", () => {
             anchorSize: new naver.maps.Size(10, 10),
           });
           regionTourInfoWindows.push(infoWindow);
-          // 마커 클릭 시 인포윈도우 표시 (다른 인포윈도우들은 닫기)
+          // 마커 클릭 시 인포윈도우 표시
           naver.maps.Event.addListener(marker, "click", () => {
             regionTourInfoWindows.forEach((iw) => iw.close());
             infoWindow.open(map, marker);
           });
         });
 
-        // 신규: 생성된 지역 기반 마커들의 위치로 지도 이동 (bounds 계산)
+        // 지도 이동 (bounds 계산)
         if (regionTourMarkers.length > 0) {
           let bounds = new naver.maps.LatLngBounds();
           regionTourMarkers.forEach((marker) => {
@@ -703,6 +708,11 @@ window.addEventListener("DOMContentLoaded", () => {
           map.fitBounds(bounds);
           map.panTo(bounds.getCenter());
         }
+
+        // 신규: 게시판에 데이터 표시 (전체 아이템을 전역 변수에 저장하고 1페이지 렌더링)
+        tourBoardData = items;
+        tourBoardCurrentPage = 1;
+        renderTourBoardPage(1);
       })
       .catch((error) => {
         dataDisplay.innerText = "Error fetching data: " + error;
@@ -789,4 +799,60 @@ window.addEventListener("DOMContentLoaded", () => {
         dataDisplay.innerText = "Error fetching data: " + error;
       });
   });
+
+  // 게시판의 특정 페이지 렌더링 함수
+  function renderTourBoardPage(page) {
+    const start = (page - 1) * tourBoardItemsPerPage;
+    const end = start + tourBoardItemsPerPage;
+    const pageItems = tourBoardData.slice(start, end);
+
+    const boardContainer = document.getElementById("tourBoardItems");
+    boardContainer.innerHTML = "";
+
+    pageItems.forEach((item) => {
+      // 각 아이템 박스 생성 (인포윈도우와 비슷한 스타일)
+      const div = document.createElement("div");
+      div.className = "tour-board-item";
+      div.innerHTML = `
+      <div class="board-item-title">${item.title}</div>
+      ${
+        item.firstimage
+          ? `<div class="board-item-image"><img src="${item.firstimage}" alt="${item.title}"></div>`
+          : ""
+      }
+      <div class="board-item-address">${item.addr1 ? item.addr1 : ""} ${
+        item.addr2 ? item.addr2 : ""
+      }</div>
+      <div class="board-item-details">
+        관광타입: ${item.contenttypeid}<br>
+        생성일: ${item.createdtime}
+      </div>
+    `;
+      boardContainer.appendChild(div);
+    });
+
+    renderTourBoardPagination();
+  }
+
+  // 게시판 페이지네이션 렌더링 함수
+  function renderTourBoardPagination() {
+    const paginationContainer = document.getElementById("tourBoardPagination");
+    paginationContainer.innerHTML = "";
+
+    const totalPages = Math.ceil(tourBoardData.length / tourBoardItemsPerPage);
+    for (let i = 1; i <= totalPages; i++) {
+      const pageLink = document.createElement("a");
+      pageLink.href = "#";
+      pageLink.innerText = i;
+      if (i === tourBoardCurrentPage) {
+        pageLink.className = "active";
+      }
+      pageLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        tourBoardCurrentPage = i;
+        renderTourBoardPage(i);
+      });
+      paginationContainer.appendChild(pageLink);
+    }
+  }
 });
