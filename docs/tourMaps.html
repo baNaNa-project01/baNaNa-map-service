@@ -136,7 +136,22 @@
       <div id="tourBoardPagination" class="tour-board-pagination"></div>
     </div>
 
-    <!-- TourAPI 관련 UI (지도 아래 영역)
+    <!-- 상세 관광정보 팝업 모달 -->
+    <div id="detailModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <div class="modal-body">
+          <div class="modal-left">
+            <img id="modalImage" src="" alt="Detail Image" />
+          </div>
+          <div class="modal-right">
+            <div id="modalDetails"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TourAPI 관련 UI (지도 아래 영역) -->
     <div id="tourapiContainer">
       <h1>TourAPI 지역 코드 조회</h1>
       <hr />
@@ -161,8 +176,8 @@
       범위값 입력 : <input type="text" id="radius" /><br />
       <button id="locationsearchButton">위치기반 조회하기</button>
       <hr />
-      조회된 데이터를 보여줄 영역 
+      <!-- 조회된 데이터를 보여줄 영역  -->
       <p id="data"></p>
-    </div>-->
+    </div>
   </body>
 </html>
