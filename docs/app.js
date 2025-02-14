@@ -650,9 +650,18 @@ window.addEventListener("DOMContentLoaded", () => {
 
         // API 응답 구조가 { response: { body: { items: { item: [...] } } } } 형태라고 가정합니다.
         let items = myJson.response.body.items.item;
+
+        // 조회된 정보가 없을 경우 alert를 표시
+        if (!items || (Array.isArray(items) && items.length === 0)) {
+          alert("조회된 정보가 없습니다.");
+          return;
+        }
+
+        // 만약 단일 객체라면 배열로 변환
         if (!Array.isArray(items)) {
           items = [items];
         }
+
         items.forEach((item) => {
           // 좌표: mapy(위도), mapx(경도)
           const position = new naver.maps.LatLng(
