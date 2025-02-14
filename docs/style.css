@@ -238,6 +238,61 @@ body {
   border-color: #f8f41a;
 }
 
+/* 관광정보 게시판 스타일 */
+#tourBoard {
+  padding: 20px;
+  background: #fff;
+  border-top: 1px solid #ccc;
+  margin-top: 20px;
+}
+
+#tourBoard h2 {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* 그리드 형태: 한 줄에 5개씩, 15개(3줄) per page */
+.tour-board-items {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+/* 게시판 아이템 (인포윈도우와 유사한 박스 스타일) */
+.tour-board-item {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #f9f9f9;
+  padding: 10px;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-align: center;
+}
+
+.tour-board-item img {
+  max-width: 100%;
+  border-radius: 3px;
+  margin-bottom: 5px;
+}
+
+/* 게시판 페이지네이션 스타일 */
+.tour-board-pagination {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.tour-board-pagination a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.tour-board-pagination a.active {
+  color: red;
+}
+
 /* 기존 .marker 와 .search-marker 외에 신규: 지역기반 관광정보 노란 마커 */
 .regionTourMarker {
   border: 1px solid black;
