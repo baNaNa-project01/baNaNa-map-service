@@ -29,6 +29,24 @@ body {
   color: rgb(22, 19, 19);
 }
 
+/* 관광 데이터 마커 (일반 마커) */
+.marker {
+  width: 20px;
+  height: 20px;
+  background: blue;
+  border: 2px solid white;
+  border-radius: 50%;
+}
+
+/* 키워드/카테고리 검색 마커 */
+.search-marker {
+  width: 24px;
+  height: 24px;
+  background: red;
+  border: 2px solid white;
+  border-radius: 50%;
+}
+
 /* 검색창: 지도 내부 중앙 상단 */
 #search {
   position: absolute;
@@ -132,8 +150,9 @@ body {
 
 /* 검색 결과 목록 창 */
 #menu_wrap {
-  position: relative;
-  margin: 10px 20px;
+  position: absolute;
+  top: 120px; /* 지도의 상단에서 60px 아래에 위치 */
+  left: 10px; /* 지도의 좌측에서 10px 떨어지게 */
   display: none;
   background: rgba(255, 255, 255, 0.9);
   width: 300px;
@@ -143,7 +162,9 @@ body {
   border: 1px solid #ccc;
   border-radius: 4px;
   box-sizing: border-box;
+  z-index: 1000;
 }
+
 #placesList {
   list-style: none;
   padding: 0;
