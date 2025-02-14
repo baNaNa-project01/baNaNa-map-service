@@ -318,6 +318,123 @@ function searchPlace(data, status, pagination) {
   }
 }
 
+/* 11. 카테고리 검색 기능 */
+function searchByCategory(categoryCode) {
+  if (!categoryCode) {
+    alert("카테고리를 선택해주세요.");
+    return;
+  }
+  console.log("🔍 카테고리 검색 요청:", categoryCode);
+  if (window.search_loc) {
+    // Naver 지도에서 현재 보이는 영역의 경계 구하기
+    const naverBounds = map.getBounds();
+    const sw = naverBounds.getSW();
+    const ne = naverBounds.getNE();
+    // Kakao 지도 객체의 LatLng로 변환
+    const kakaoSw = new kakao.maps.LatLng(sw.lat(), sw.lng());
+    const kakaoNe = new kakao.maps.LatLng(ne.lat(), ne.lng());
+    // Kakao의 LatLngBounds 객체 생성
+    const kakaoBounds = new kakao.maps.LatLngBounds(kakaoSw, kakaoNe);
+    // categorySearch 시 bounds 옵션에 kakaoBounds 객체를 넘김
+    window.search_loc.categorySearch(categoryCode, categorySearchCB, {
+      bounds: kakaoBounds,
+    });
+  } else {
+    console.error("❌ Kakao search service is not initialized yet.");
+  }
+}
+function categorySearchCB(data, status, pagination) {
+  console.log("📌 categorySearchCB 호출됨");
+  if (status === kakao.maps.services.Status.OK) {
+    clearSearchMarkers();
+    const listEl = document.getElementById("placesList");
+    if (listEl) listEl.innerHTML = "";
+    document.getElementById("menu_wrap").style.display = "block";
+    var bounds = new naver.maps.LatLngBounds();
+    data.forEach(function (place, i) {
+      console.log("검색된 장소 정보:", place);
+      var position = new naver.maps.LatLng(
+        parseFloat(place.y),
+        parseFloat(place.x)
+      );
+      var marker = new naver.maps.Marker({
+        map: map,
+        position: position,
+        icon: {
+          content: `<div class='search-marker'></div>`,
+          anchor: new naver.maps.Point(12, 12),
+        },
+      });
+      searchMarkers.push(marker);
+      var content = `<div class='infowindow_wrap'>
+          <div class='infowindow_title'>${place.place_name}</div>
+          <div class='infowindow_content'>${place.address_name}</div>
+          <div class='infowindow_phone'>${
+            place.phone ? place.phone : "전화번호 정보 없음"
+          }</div>
+        </div>`;
+      var infowindow = new naver.maps.InfoWindow({
+        content: content,
+        backgroundColor: "rgba(255, 255, 255, 0.9)",
+        borderColor: "#ccc",
+        anchorSize: new naver.maps.Size(10, 10),
+      });
+      searchInfoWindows.push(infowindow);
+      naver.maps.Event.addListener(marker, "click", function () {
+        if (infowindow.getMap()) {
+          infowindow.close();
+        } else {
+          searchInfoWindows.forEach((iw) => iw.close());
+          infowindow.open(map, marker);
+        }
+      });
+      if (listEl) {
+        var itemEl = document.createElement("li");
+        itemEl.className = "item";
+        var itemStr =
+          '<span class="markerbg marker_' +
+          (i + 1) +
+          '"></span>' +
+          '<div class="info">' +
+          "<h5>" +
+          place.place_name +
+          "</h5>" +
+          (place.road_address_name
+            ? "<span>" +
+              place.road_address_name +
+              "</span><br><span class='jibun gray'>" +
+              place.address_name +
+              "</span><br>"
+            : "<span>" + place.address_name + "</span><br>") +
+          "<span class='tel'>" +
+          (place.phone || "") +
+          "</span>" +
+          "</div>";
+        itemEl.innerHTML = itemStr;
+        itemEl.onclick = function () {
+          searchInfoWindows.forEach((iw) => iw.close());
+          infowindow.open(map, marker);
+          map.panTo(position);
+        };
+        listEl.appendChild(itemEl);
+      }
+      bounds.extend(position);
+    });
+    map.fitBounds(bounds);
+    naver.maps.Event.addListener(map, "click", function () {
+      searchInfoWindows.forEach((iw) => iw.close());
+    });
+    displayPagination(pagination);
+  } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
+    alert("검색 결과가 존재하지 않습니다.");
+    document.getElementById("menu_wrap").style.display = "none";
+    return;
+  } else {
+    alert("검색 결과 중 오류가 발생했습니다.");
+    return;
+  }
+}
+
 /* 11. 페이지네이션 표시 (공식 예제 참고) */
 function displayPagination(pagination) {
   var paginationEl = document.getElementById("pagination"),
