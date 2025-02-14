@@ -1,4 +1,3 @@
-// server.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -41,7 +40,6 @@ app.get("/api/tour-data", async (req, res) => {
       .status(500)
       .json({ error: "Tour API Key is missing in server (.env 파일 확인)" });
   }
-  // 예시로 areaBasedList1 API를 호출 (필요에 따라 URL 및 파라미터 조정)
   const url = `https://apis.data.go.kr/B551011/KorService1/areaBasedList1?numOfRows=10&pageNo=1&MobileOS=ETC&MobileApp=study&_type=json&areaCode=1&sigunguCode=1&serviceKey=${tourAPIKey}`;
 
   try {
@@ -96,16 +94,16 @@ app.get("/api/detail-region", async (req, res) => {
   }
 });
 
-// TourAPI: 지역 기반 관광정보 조회 엔드포인트 (areaCode, sigunguCode 사용)
+// TourAPI: 지역 기반 관광정보 조회 엔드포인트 (contentTypeId, areaCode, sigunguCode 사용)
 app.get("/api/region-tour-info", async (req, res) => {
-  const { areaCode, sigunguCode } = req.query;
+  const { contentTypeId, areaCode, sigunguCode } = req.query;
   const tourAPIKey = process.env.TOUR_API;
   if (!tourAPIKey) {
     return res
       .status(500)
       .json({ error: "Tour API Key is missing in server (.env 파일 확인)" });
   }
-  const url = `https://apis.data.go.kr/B551011/KorService1/areaBasedList1?numOfRows=50&pageNo=1&MobileOS=ETC&MobileApp=study&_type=json&areaCode=${areaCode}&sigunguCode=${sigunguCode}&serviceKey=${tourAPIKey}`;
+  const url = `https://apis.data.go.kr/B551011/KorService1/areaBasedList1?numOfRows=50&pageNo=1&MobileOS=ETC&MobileApp=study&_type=json&contentTypeId=${contentTypeId}&areaCode=${areaCode}&sigunguCode=${sigunguCode}&serviceKey=${tourAPIKey}`;
   try {
     const response = await fetch(url);
     const data = await response.json();
