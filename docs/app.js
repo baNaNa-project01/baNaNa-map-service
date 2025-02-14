@@ -6,6 +6,11 @@ let markerData = [];
 let searchMarkers = [];
 let searchInfoWindows = [];
 
+// 신규: 지역 기반 관광정보 선택값 저장 변수
+let selectedAreaCode = null;
+let selectedSigunguCode = null;
+let selectedContentTypeId = null;
+
 // 기존 TourAPI 데이터 불러오기 테스트 (콘솔 로그용)
 fetch("/api/tour-data")
   .then((res) => res.json())
@@ -338,10 +343,9 @@ $(document).on("click", ".category-btn", function () {
 
 // =================== 기존 지도/검색 관련 코드 끝 ===================
 
-// =================== TourAPI 관련 UI/기능 코드 ===================
-// DOMContentLoaded 이벤트를 사용하여 DOM 요소들이 모두 로드된 후에 실행합니다.
+// =================== TourAPI 관련 UI/기능 및 신규 지역 기반 관광정보 코드 ===================
 window.addEventListener("DOMContentLoaded", () => {
-  // TourAPI 관련 DOM 요소 선택
+  // 기존 TourAPI UI 관련 DOM 요소 선택
   const dataDisplay = document.getElementById("data");
   const checkRegionCodeButton = document.getElementById("checkRegionCode");
   const checkDetailRegionCodeButton = document.getElementById(
@@ -357,8 +361,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const searchButton = document.getElementById("searchButton");
   const locationsearchButton = document.getElementById("locationsearchButton");
 
-  // ***** 세부 지역 및 시군구 옵션박스 초기화 *****
-  // 예시 코드에 있는 지역 코드 목록과 이름 매핑
+  // 기존 세부 지역 및 시군구 옵션박스 초기화 코드
   const detailRegionCodes = [
     1, 2, 3, 4, 5, 6, 7, 8, 31, 32, 33, 34, 35, 36, 37, 38, 39,
   ];
@@ -395,14 +398,19 @@ window.addEventListener("DOMContentLoaded", () => {
     detailRegionIndexSelect.appendChild(indexOption);
   });
 
-  // 세부 지역(시군구) 데이터를 채우는 함수 (기존 함수 재사용)
+  // 세부 지역(시군구) 데이터를 채우는 함수 (옵션박스와 버튼 UI 함께 업데이트)
   function populateSigunguSelect(areaCode) {
     const detailUrl = `/api/detail-region?areaCode=${areaCode}`;
     fetch(detailUrl)
       .then((res) => res.json())
       .then((myJson) => {
-        // 시군구 셀렉트 박스 초기화
+        // 시군구 드롭다운 초기화
         detaildetailRegionIndexSelect.innerHTML = "";
+        // 신규: 버튼 컨테이너 초기화
+        const sigunguButtonsContainer = document.getElementById(
+          "sigunguButtonsContainer"
+        );
+        sigunguButtonsContainer.innerHTML = "";
 
         const items = myJson.response.body.items.item;
         const itemArray = Array.isArray(items) ? items : [items];
@@ -412,18 +420,30 @@ window.addEventListener("DOMContentLoaded", () => {
           option.value = "";
           option.text = `해당 지역에 시군구 정보가 없습니다.`;
           detaildetailRegionIndexSelect.appendChild(option);
+          // 버튼으로도 표시
+          const btn = document.createElement("button");
+          btn.className = "sigungu-btn";
+          btn.dataset.code = "";
+          btn.innerText = "없음";
+          sigunguButtonsContainer.appendChild(btn);
         } else {
           itemArray.forEach((item) => {
             const option = document.createElement("option");
             option.value = item.code;
             option.text = item.name;
             detaildetailRegionIndexSelect.appendChild(option);
+            // 신규: 버튼 생성
+            const btn = document.createElement("button");
+            btn.className = "sigungu-btn";
+            btn.dataset.code = item.code;
+            btn.innerText = item.name;
+            sigunguButtonsContainer.appendChild(btn);
           });
         }
       });
   }
 
-  // detailRegionIndexSelect가 변경될 때 시군구 옵션 업데이트
+  // detailRegionIndexSelect 변경 시 시군구 옵션 업데이트
   detailRegionIndexSelect.addEventListener("change", () => {
     const selectedCode = detailRegionIndexSelect.value;
     populateSigunguSelect(selectedCode);
@@ -432,8 +452,75 @@ window.addEventListener("DOMContentLoaded", () => {
   // 초기에는 서울(코드 1)로 시군구 데이터 로드
   populateSigunguSelect(1);
 
-  // ***** TourAPI 관련 이벤트 핸들러 *****
+  // 도별 버튼 클릭: 신규 지역 선택 (수정됨)
+  const regionBtns = document.querySelectorAll(".region-btn");
+  regionBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      // 모든 도 버튼 active 클래스 제거 후, 클릭한 버튼에 추가
+      regionBtns.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedAreaCode = btn.dataset.code;
+      console.log("선택된 지역 코드:", selectedAreaCode);
+      // 도별 선택 시, 세부 지역(시군구) 업데이트 (드롭다운과 버튼 모두 갱신)
+      populateSigunguSelect(selectedAreaCode);
+    });
+  });
 
+  // 시군구 버튼 클릭: 신규 세부 지역 선택
+  document
+    .getElementById("sigunguButtonsContainer")
+    .addEventListener("click", (e) => {
+      if (e.target && e.target.classList.contains("sigungu-btn")) {
+        // active 처리: 모든 버튼에서 제거 후 클릭한 버튼에 추가
+        document
+          .querySelectorAll("#sigunguButtonsContainer .sigungu-btn")
+          .forEach((b) => b.classList.remove("active"));
+        e.target.classList.add("active");
+        selectedSigunguCode = e.target.dataset.code;
+        console.log("선택된 시군구 코드:", selectedSigunguCode);
+      }
+    });
+
+  // 관광 타입 버튼 클릭: 신규 콘텐츠 타입 선택
+  const contentTypeBtns = document.querySelectorAll(".contentType-btn");
+  contentTypeBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      contentTypeBtns.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedContentTypeId = btn.dataset.contenttypeid;
+      console.log("선택된 콘텐츠 타입 ID:", selectedContentTypeId);
+    });
+  });
+
+  // 신규: 지역기반 관광정보 조회하기 버튼 이벤트 처리
+  const regionTourSearchButton = document.getElementById(
+    "regionTourSearchButton"
+  );
+  regionTourSearchButton.addEventListener("click", () => {
+    if (!selectedAreaCode) {
+      alert("먼저 지역을 선택하세요.");
+      return;
+    }
+    if (!selectedSigunguCode) {
+      alert("먼저 세부 지역(시군구)을 선택하세요.");
+      return;
+    }
+    if (!selectedContentTypeId) {
+      alert("먼저 관광 타입을 선택하세요.");
+      return;
+    }
+    const regionTourInfoURL = `/api/region-tour-info?contentTypeId=${selectedContentTypeId}&areaCode=${selectedAreaCode}&sigunguCode=${selectedSigunguCode}`;
+    fetch(regionTourInfoURL)
+      .then((res) => res.json())
+      .then((myJson) => {
+        dataDisplay.innerText = JSON.stringify(myJson, null, 2);
+      })
+      .catch((error) => {
+        dataDisplay.innerText = "Error fetching data: " + error;
+      });
+  });
+
+  // 기존 TourAPI 이벤트 핸들러 (도별/세부지역/위치 기반 조회)
   // 도별 지역 코드 조회
   const tourRegionCodeURL = `/api/region-code`;
   checkRegionCodeButton.addEventListener("click", () => {
@@ -461,11 +548,12 @@ window.addEventListener("DOMContentLoaded", () => {
       });
   });
 
-  // 지역 기반 관광정보 조회 (선택한 도와 시군구 코드 전달)
+  // 기존: 지역 기반 관광정보 조회 (드롭다운 방식)
   searchButton.addEventListener("click", () => {
     const areaCode = detailRegionIndexSelect.value;
     const sigunguCode = detaildetailRegionIndexSelect.value;
-    const regionTourInfoURL = `/api/region-tour-info?areaCode=${areaCode}&sigunguCode=${sigunguCode}`;
+    const regionTourInfoURL = `/api/region-tour-info?contentTypeId=12&areaCode=${areaCode}&sigunguCode=${sigunguCode}`;
+    // 기본적으로 콘텐츠 타입 12(관광지)로 호출
     fetch(regionTourInfoURL)
       .then((res) => res.json())
       .then((myJson) => {
@@ -476,7 +564,7 @@ window.addEventListener("DOMContentLoaded", () => {
       });
   });
 
-  // 위치 기반 관광정보 조회 (위도, 경도, 반경 전달)
+  // 기존: 위치 기반 관광정보 조회
   locationsearchButton.addEventListener("click", () => {
     const latitude = document.getElementById("latitude").value;
     const longitude = document.getElementById("longitude").value;
