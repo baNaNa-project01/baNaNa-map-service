@@ -20,6 +20,8 @@ let tourBoardData = [];
 let tourBoardCurrentPage = 1;
 const tourBoardItemsPerPage = 15;
 
+const defaultImageURL = "img1.png"; // 기본 이미지 경로 (예: docs/img1.jpg 등)
+
 // 콘텐츠 타입별 상세 정보 표시에 사용할 필드와 한글 라벨 매핑
 const detailFields = {
   12: {
@@ -965,21 +967,29 @@ window.addEventListener("DOMContentLoaded", () => {
     boardContainer.innerHTML = "";
 
     pageItems.forEach((item) => {
-      // 각 아이템 박스 생성 (인포윈도우와 유사한 스타일)
       const div = document.createElement("div");
       div.className = "tour-board-item";
+      // 기본 이미지 처리: 없으면 기본 이미지로 대체
+      const firstImg =
+        item.firstimage && item.firstimage.trim() !== ""
+          ? item.firstimage
+          : defaultImageURL;
+      const secondImg =
+        item.firstimage2 && item.firstimage2.trim() !== ""
+          ? item.firstimage2
+          : "";
+
       // 데이터 속성에 contentId, contentTypeId, 그리고 이미지 URL(첫번째, 두번째)을 저장
       div.setAttribute("data-contentid", item.contentid);
       div.setAttribute("data-contenttypeid", item.contenttypeid);
-      div.setAttribute("data-firstimage", item.firstimage || "");
-      div.setAttribute("data-firstimage2", item.firstimage2 || "");
+      div.setAttribute("data-firstimage", firstImg);
+      div.setAttribute("data-firstimage2", secondImg);
+
       div.innerHTML = `
         <div class="board-item-title">${item.title}</div>
-        ${
-          item.firstimage
-            ? `<div class="board-item-image"><img src="${item.firstimage}" alt="${item.title}"></div>`
-            : ""
-        }
+        <div class="board-item-image"><img src="${firstImg}" alt="${
+        item.title
+      }"></div>
         <div class="board-item-address">${item.addr1 ? item.addr1 : ""} ${
         item.addr2 ? item.addr2 : ""
       }</div>
@@ -1003,16 +1013,15 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function showDetailPopup(contentId, contentTypeId, firstImage, secondImage) {
-    // 이미지는 게시판에서 가져온 정보를 이용하여 슬라이드 렌더링
+    // 상세 페이지 이미지는 게시판에서 가져온 이미지 정보를 우선 사용합니다.
+    // 만약 첫번째 이미지가 없으면 기본 이미지를 사용합니다.
     renderImageSlider(firstImage, secondImage);
 
-    // 상세 텍스트 정보는 기존 detail-intro 엔드포인트에서 가져옵니다.
     fetch(
       `/api/detail-intro?contentId=${contentId}&contentTypeId=${contentTypeId}`
     )
       .then((res) => res.text())
       .then((xmlText) => {
-        // XML 파서로 파싱
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, "application/xml");
         const item = xmlDoc.getElementsByTagName("item")[0];
@@ -1021,14 +1030,12 @@ window.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        // XML의 <item> 내 자식 요소들을 객체로 변환
         let detailObj = {};
         for (let i = 0; i < item.children.length; i++) {
           const child = item.children[i];
           detailObj[child.tagName] = child.textContent;
         }
 
-        // 콘텐츠 타입별로 미리 정의한 필드 목록을 사용하여 상세 정보 표시 (한글 라벨)
         const fields = detailFields[contentTypeId];
         let detailsHtml = "<ul>";
         if (fields) {
@@ -1038,7 +1045,6 @@ window.addEventListener("DOMContentLoaded", () => {
             }
           }
         } else {
-          // 매핑이 없는 경우, 값이 있는 항목만 출력
           for (const key in detailObj) {
             if (detailObj[key] && detailObj[key].trim() !== "") {
               detailsHtml += `<li><strong>${key}</strong>: ${detailObj[key]}</li>`;
@@ -1048,7 +1054,6 @@ window.addEventListener("DOMContentLoaded", () => {
         detailsHtml += "</ul>";
         document.getElementById("modalDetails").innerHTML = detailsHtml;
 
-        // 모달 보이기
         document.getElementById("detailModal").style.display = "block";
       })
       .catch((error) => {
@@ -1057,28 +1062,29 @@ window.addEventListener("DOMContentLoaded", () => {
       });
   }
 
-  // 이미지 슬라이더 렌더링 함수
   function renderImageSlider(firstImage, secondImage) {
     const modalLeft = document.querySelector(".modal-left");
-    modalLeft.innerHTML = ""; // 초기화
+    modalLeft.innerHTML = "";
 
-    if (firstImage && secondImage) {
-      // 두 이미지 모두 존재하면 슬라이더 생성
+    // 만약 첫번째 이미지가 없으면 기본 이미지로 대체
+    const img1 =
+      firstImage && firstImage.trim() !== "" ? firstImage : defaultImageURL;
+
+    if (img1 && secondImage && secondImage.trim() !== "") {
       const slider = document.createElement("div");
       slider.className = "image-slider";
 
-      const img1 = document.createElement("img");
-      img1.src = firstImage;
-      img1.className = "slide";
-      const img2 = document.createElement("img");
-      img2.src = secondImage;
-      img2.className = "slide";
-      img2.style.display = "none"; // 초기에는 두 번째 이미지 숨김
+      const image1 = document.createElement("img");
+      image1.src = img1;
+      image1.className = "slide";
+      const image2 = document.createElement("img");
+      image2.src = secondImage;
+      image2.className = "slide";
+      image2.style.display = "none";
 
-      slider.appendChild(img1);
-      slider.appendChild(img2);
+      slider.appendChild(image1);
+      slider.appendChild(image2);
 
-      // 이전/다음 버튼 생성
       const prevBtn = document.createElement("button");
       prevBtn.className = "slider-prev";
       prevBtn.innerText = "<";
@@ -1103,14 +1109,11 @@ window.addEventListener("DOMContentLoaded", () => {
       });
 
       modalLeft.appendChild(slider);
-    } else if (firstImage) {
-      // 이미지가 하나만 있으면 단일 이미지 표시
-      const img = document.createElement("img");
-      img.src = firstImage;
-      modalLeft.appendChild(img);
     } else {
-      // 이미지가 없다면 빈 영역 처리
-      modalLeft.innerHTML = "";
+      // 단일 이미지 또는 이미지가 없는 경우 단일 이미지(기본 이미지 사용)
+      const img = document.createElement("img");
+      img.src = img1;
+      modalLeft.appendChild(img);
     }
   }
 
