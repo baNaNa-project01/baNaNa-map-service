@@ -11,6 +11,10 @@ let selectedAreaCode = null;
 let selectedSigunguCode = null;
 let selectedContentTypeId = null;
 
+// 신규: 지역기반 관광정보 마커와 인포윈도우 저장 배열
+let regionTourMarkers = [];
+let regionTourInfoWindows = [];
+
 // 기존 TourAPI 데이터 불러오기 테스트 (콘솔 로그용)
 fetch("/api/tour-data")
   .then((res) => res.json())
@@ -98,6 +102,10 @@ function initMap() {
   if (markerData.length > 0) {
     addMarkers();
   }
+  // 신규: 지도 빈 곳 클릭 시 regionTour 인포윈도우 닫기
+  naver.maps.Event.addListener(map, "click", function () {
+    regionTourInfoWindows.forEach((iw) => iw.close());
+  });
 }
 
 /* 6. 관광 데이터 마커 추가 함수 (네이버 지도) */
@@ -452,7 +460,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // 초기에는 서울(코드 1)로 시군구 데이터 로드
   populateSigunguSelect(1);
 
-  // 도별 버튼 클릭: 신규 지역 선택 (수정됨)
+  // 도별 버튼 클릭: 신규 지역 선택 (수정됨 - 버튼 클릭 시 sigungu 버튼도 업데이트)
   const regionBtns = document.querySelectorAll(".region-btn");
   regionBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -513,15 +521,92 @@ window.addEventListener("DOMContentLoaded", () => {
     fetch(regionTourInfoURL)
       .then((res) => res.json())
       .then((myJson) => {
+        // JSON 데이터 출력 (기존)
         dataDisplay.innerText = JSON.stringify(myJson, null, 2);
+        // 신규: 기존 지역기반 마커 제거
+        clearRegionTourMarkers();
+
+        // API 응답 구조가 { response: { body: { items: { item: [...] } } } } 형태라고 가정합니다.
+        let items = myJson.response.body.items.item;
+        if (!Array.isArray(items)) {
+          items = [items];
+        }
+        items.forEach((item) => {
+          // 좌표: mapy(위도), mapx(경도)
+          const position = new naver.maps.LatLng(
+            parseFloat(item.mapy),
+            parseFloat(item.mapx)
+          );
+          // 신규 노란 마커 생성
+          const marker = new naver.maps.Marker({
+            map: map,
+            position: position,
+            icon: {
+              content: "<div class='regionTourMarker'></div>",
+              anchor: new naver.maps.Point(12, 12),
+            },
+          });
+          regionTourMarkers.push(marker);
+          // 인포윈도우 내용 구성 (필요 정보: title, addr1, addr2, contenttypeid, createdtime, firstimage, modifiedtime)
+          const content = `
+            <div class="infowindow_wrap">
+              <div class="infowindow_title">${item.title}</div>
+              <div class="infowindow_content">
+                주소: ${item.addr1} ${item.addr2}<br>
+                관광타입: ${item.contenttypeid}<br>
+                생성일: ${item.createdtime}<br>
+                수정일: ${item.modifiedtime}<br>
+                ${
+                  item.firstimage
+                    ? `<img src="${item.firstimage}" alt="${item.title}" style="width:100%;">`
+                    : ""
+                }
+              </div>
+            </div>`;
+          const infoWindow = new naver.maps.InfoWindow({
+            content: content,
+            backgroundColor: "rgba(255,255,255,0.9)",
+            borderColor: "#ccc",
+            anchorSize: new naver.maps.Size(10, 10),
+          });
+          regionTourInfoWindows.push(infoWindow);
+          // 마커 클릭 시 인포윈도우 표시 (다른 인포윈도우들은 닫기)
+          naver.maps.Event.addListener(marker, "click", () => {
+            regionTourInfoWindows.forEach((iw) => iw.close());
+            infoWindow.open(map, marker);
+          });
+        });
+
+        // 신규: 생성된 지역 기반 마커들의 위치로 지도 이동 (bounds 계산)
+        if (regionTourMarkers.length > 0) {
+          let bounds = new naver.maps.LatLngBounds();
+          regionTourMarkers.forEach((marker) => {
+            bounds.extend(marker.getPosition());
+          });
+          map.fitBounds(bounds);
+          map.panTo(bounds.getCenter());
+        }
       })
       .catch((error) => {
         dataDisplay.innerText = "Error fetching data: " + error;
       });
   });
 
-  // 기존 TourAPI 이벤트 핸들러 (도별/세부지역/위치 기반 조회)
-  // 도별 지역 코드 조회
+  // 신규: 기존 지역기반 마커와 인포윈도우 제거 함수
+  function clearRegionTourMarkers() {
+    if (regionTourMarkers.length) {
+      regionTourMarkers.forEach((marker) => {
+        marker.setMap(null);
+      });
+      regionTourMarkers = [];
+    }
+    if (regionTourInfoWindows.length) {
+      regionTourInfoWindows.forEach((iw) => iw.close());
+      regionTourInfoWindows = [];
+    }
+  }
+
+  // 기존: 도별 지역 코드 조회
   const tourRegionCodeURL = `/api/region-code`;
   checkRegionCodeButton.addEventListener("click", () => {
     fetch(tourRegionCodeURL)
@@ -534,7 +619,7 @@ window.addEventListener("DOMContentLoaded", () => {
       });
   });
 
-  // 세부 지역 코드 조회 (선택한 도의 코드 전달)
+  // 기존: 세부 지역 코드 조회 (선택한 도의 코드 전달)
   checkDetailRegionCodeButton.addEventListener("click", () => {
     const selectedAreaCode = detailRegionSelect.value;
     const detailRegionURL = `/api/detail-region?areaCode=${selectedAreaCode}`;
