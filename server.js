@@ -178,6 +178,29 @@ app.get("/api/detail-pet-tour", async (req, res) => {
   }
 });
 
+// 키워드 기반 관광정보 검색 엔드포인트
+app.get("/api/search-keyword", async (req, res) => {
+  const { keyword } = req.query;
+  const tourAPIKey = process.env.TOUR_API;
+  if (!tourAPIKey) {
+    return res
+      .status(500)
+      .json({ error: "Tour API Key is missing in server (.env 파일 확인)" });
+  }
+  const url = `https://apis.data.go.kr/B551011/KorService1/searchKeyword1?MobileOS=ETC&MobileApp=ETC&_type=json&keyword=${encodeURIComponent(
+    keyword
+  )}&serviceKey=${tourAPIKey}`;
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    console.log("✅ 키워드 관광정보 검색 성공:", data);
+    res.json(data);
+  } catch (error) {
+    console.error("❌ 키워드 관광정보 검색 실패:", error);
+    res.status(500).json({ error: "키워드 관광정보 검색 실패" });
+  }
+});
+
 // 관광 데이터 제공 API (예시 데이터)
 app.get("/api/data", (req, res) => {
   res.json([
