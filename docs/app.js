@@ -761,12 +761,19 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // 관광 타입 버튼 클릭: 신규 콘텐츠 타입 선택
   const contentTypeBtns = document.querySelectorAll(".contentType-btn");
+  const eventDateRow = document.getElementById("eventDateRow"); // 신규 추가한 날짜 입력란 row
   contentTypeBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       contentTypeBtns.forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       selectedContentTypeId = btn.dataset.contenttypeid;
       console.log("선택된 콘텐츠 타입 ID:", selectedContentTypeId);
+      // 만약 선택된 타입이 행사/공연/축제(15)라면 날짜 선택 박스를 보이고, 아니면 숨깁니다.
+      if (selectedContentTypeId === "15") {
+        eventDateRow.style.display = "flex"; // 또는 block으로 설정 가능
+      } else {
+        eventDateRow.style.display = "none";
+      }
     });
   });
 
@@ -799,7 +806,7 @@ window.addEventListener("DOMContentLoaded", () => {
         // API 응답 구조가 { response: { body: { items: { item: [...] } } } } 형태라고 가정합니다.
         let items = myJson.response.body.items.item;
 
-        // 조회된 정보가 없을 경우 alert를 표시
+        // 조회된 정보가 없을 경우 alert 표시
         if (!items || (Array.isArray(items) && items.length === 0)) {
           alert("조회된 정보가 없습니다.");
           return;
@@ -810,6 +817,41 @@ window.addEventListener("DOMContentLoaded", () => {
           items = [items];
         }
 
+        if (selectedContentTypeId === "15") {
+          const filterStart = document.getElementById("eventStartDate").value;
+          const filterEnd = document.getElementById("eventEndDate").value;
+          if (filterStart) {
+            // HTML 입력값 "YYYY-MM-DD"에서 대시(-)를 제거하여 "YYYYMMDD" 형식으로 만듦
+            const fs = filterStart.replace(/-/g, ""); // 예: "2024-08-09" → "20240809"
+
+            if (filterEnd) {
+              const fe = filterEnd.replace(/-/g, ""); // 예: "2024-08-11" → "20240811"
+              // **기간 겹침 조건**: 이벤트가 선택한 기간과 겹치는 경우
+              // 조건: 이벤트가 filterEnd 이전에 시작하고(eventstartdate <= fe)
+              //      동시에 이벤트가 filterStart 이후에 끝난다면(eventenddate >= fs)
+              items = items.filter((item) => {
+                if (!item.eventstartdate || !item.eventenddate) return false;
+                const eventStart = item.eventstartdate.trim();
+                const eventEnd = item.eventenddate.trim();
+                return eventStart <= fe && eventEnd >= fs;
+              });
+            } else {
+              // 종료일 없이 시작일만 선택한 경우: 이벤트의 시작일이 fs 이상인 경우
+              items = items.filter((item) => {
+                if (!item.eventstartdate) return false;
+                const eventStart = item.eventstartdate.trim();
+                return eventStart >= fs;
+              });
+            }
+
+            if (items.length === 0) {
+              alert("선택한 기간에 해당하는 행사/공연/축제 정보가 없습니다.");
+              return;
+            }
+          }
+        }
+
+        // 조회된 항목들을 지도에 마커로 표시
         items.forEach((item) => {
           // 좌표: mapy(위도), mapx(경도)
           const position = new naver.maps.LatLng(
@@ -828,20 +870,20 @@ window.addEventListener("DOMContentLoaded", () => {
           regionTourMarkers.push(marker);
           // 인포윈도우 내용 구성
           const content = `
-            <div class="infowindow_wrap">
-              <div class="infowindow_title">${item.title}</div>
-              <div class="infowindow_content">
-                주소: ${item.addr1} ${item.addr2}<br>
-                관광타입: ${item.contenttypeid}<br>
-                생성일: ${item.createdtime}<br>
-                수정일: ${item.modifiedtime}<br>
-                ${
-                  item.firstimage
-                    ? `<img src="${item.firstimage}" alt="${item.title}" style="width:100%;">`
-                    : ""
-                }
-              </div>
-            </div>`;
+          <div class="infowindow_wrap">
+            <div class="infowindow_title">${item.title}</div>
+            <div class="infowindow_content">
+              주소: ${item.addr1} ${item.addr2}<br>
+              관광타입: ${item.contenttypeid}<br>
+              생성일: ${item.createdtime}<br>
+              수정일: ${item.modifiedtime}<br>
+              ${
+                item.firstimage
+                  ? `<img src="${item.firstimage}" alt="${item.title}" style="width:100%;">`
+                  : ""
+              }
+            </div>
+          </div>`;
           const infoWindow = new naver.maps.InfoWindow({
             content: content,
             backgroundColor: "rgba(255,255,255,0.9)",
