@@ -1260,4 +1260,42 @@ window.addEventListener("DOMContentLoaded", () => {
       $(this).addClass("control-on");
     }
   });
+
+  // 키워드 검색 버튼 이벤트 핸들러 추가
+  document
+    .getElementById("keywordSearchButton")
+    .addEventListener("click", () => {
+      const keyword = document.getElementById("keywordInput").value.trim();
+      if (!keyword) {
+        alert("검색어를 입력하세요.");
+        return;
+      }
+      const url = `/api/search-keyword?keyword=${encodeURIComponent(keyword)}`;
+      fetch(url)
+        .then((res) => res.json())
+        .then((data) => {
+          // API 응답 구조가 { response: { body: { items: { item: [...] } } } }로 가정합니다.
+          let items =
+            data.response &&
+            data.response.body &&
+            data.response.body.items &&
+            data.response.body.items.item;
+          if (!items || (Array.isArray(items) && items.length === 0)) {
+            alert("조회된 관광정보가 없습니다.");
+            return;
+          }
+          // 단일 객체일 경우 배열로 변환
+          if (!Array.isArray(items)) {
+            items = [items];
+          }
+          // 기존 지역기반 조회와 동일하게, 전역 변수 tourBoardData에 저장 후 페이지 렌더링
+          tourBoardData = items;
+          tourBoardCurrentPage = 1;
+          renderTourBoardPage(1);
+        })
+        .catch((error) => {
+          console.error("키워드 검색 오류:", error);
+          alert("키워드 검색 중 오류가 발생했습니다.");
+        });
+    });
 });
