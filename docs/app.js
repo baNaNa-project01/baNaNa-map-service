@@ -1055,10 +1055,10 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function showDetailPopup(contentId, contentTypeId, firstImage, secondImage) {
-    // 상세 페이지 이미지는 게시판에서 가져온 이미지 정보를 우선 사용합니다.
-    // 만약 첫번째 이미지가 없으면 기본 이미지를 사용합니다.
+    // 기존: 이미지 슬라이더 렌더링
     renderImageSlider(firstImage, secondImage);
 
+    // 상세정보(XML) 조회 (기존)
     fetch(
       `/api/detail-intro?contentId=${contentId}&contentTypeId=${contentTypeId}`
     )
@@ -1078,6 +1078,7 @@ window.addEventListener("DOMContentLoaded", () => {
           detailObj[child.tagName] = child.textContent;
         }
 
+        // 기존 detailFields 매핑 사용 (contentType별로 세부 항목 지정)
         const fields = detailFields[contentTypeId];
         let detailsHtml = "<ul>";
         if (fields) {
@@ -1094,9 +1095,62 @@ window.addEventListener("DOMContentLoaded", () => {
           }
         }
         detailsHtml += "</ul>";
-        document.getElementById("modalDetails").innerHTML = detailsHtml;
 
-        document.getElementById("detailModal").style.display = "block";
+        // 이제 추가: 반려동물 여행정보 조회
+        fetch(`/api/detail-pet-tour?contentId=${contentId}`)
+          .then((res) => res.json())
+          .then((petData) => {
+            let petInfoHtml = "";
+            try {
+              // petData.response.body.items.item가 배열일 수도, 단일 객체일 수도 있음
+              let petItem = petData.response.body.items.item;
+              if (Array.isArray(petItem)) {
+                petItem = petItem[0];
+              }
+              // 만약 반려동물 정보가 없거나 주요 항목(예: acmpyTypeCd)이 비어있으면...
+              if (
+                !petItem ||
+                !petItem.acmpyTypeCd ||
+                petItem.acmpyTypeCd.trim() === ""
+              ) {
+                petInfoHtml = "<p>반려동물 동반여부 정보없음</p>";
+              } else {
+                // 영어 키 대신 한글 레이블로 표시 (원하는대로 수정 가능)
+                const petTourFields = {
+                  relaAcdntRiskMtr: "반려견 보호자 서약",
+                  acmpyTypeCd: "동반 가능 구역",
+                  etcAcmpyInfo: "기타 동반 안내사항",
+                  acmpyPsblCpam: "동반 가능 견종",
+                  acmpyNeedMtr: "필수 준비물",
+                };
+                petInfoHtml = "<ul>";
+                for (const key in petTourFields) {
+                  const label = petTourFields[key];
+                  // 값이 없으면 "정보 없음"으로 표시
+                  const value =
+                    petItem[key] && petItem[key].trim() !== ""
+                      ? petItem[key]
+                      : "정보 없음";
+                  petInfoHtml += `<li><strong>${label}</strong>: ${value}</li>`;
+                }
+                petInfoHtml += "</ul>";
+              }
+            } catch (e) {
+              petInfoHtml = "<p>반려동물 동반여부 정보없음</p>";
+            }
+            // 세부정보 HTML에 반려동물 정보를 추가
+            detailsHtml += "<h3>반려동물 동반 정보</h3>" + petInfoHtml;
+            document.getElementById("modalDetails").innerHTML = detailsHtml;
+            document.getElementById("detailModal").style.display = "block";
+          })
+          .catch((error) => {
+            console.error("반려동물 정보 호출 오류:", error);
+            // 반려동물 정보 조회 실패 시 기본 메시지 출력
+            detailsHtml +=
+              "<h3>반려동물 동반 정보</h3><p>반려동물 동반여부 정보없음</p>";
+            document.getElementById("modalDetails").innerHTML = detailsHtml;
+            document.getElementById("detailModal").style.display = "block";
+          });
       })
       .catch((error) => {
         console.error("Error fetching detail intro:", error);
