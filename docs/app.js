@@ -20,7 +20,7 @@ let tourBoardData = [];
 let tourBoardCurrentPage = 1;
 const tourBoardItemsPerPage = 15;
 
-const defaultImageURL = "defaultImg.png"; // 기본 이미지 경로 (예: docs/img1.jpg 등)
+const defaultImageURL = "assets/defaultImg.png"; // 기본 이미지 경로 (예: docs/img1.jpg 등)
 
 // 콘텐츠 타입별 상세 정보 표시에 사용할 필드와 한글 라벨 매핑
 const detailFields = {
