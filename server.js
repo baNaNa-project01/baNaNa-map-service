@@ -159,6 +159,25 @@ app.get("/api/detail-intro", async (req, res) => {
   }
 });
 
+// 반려동물 여행정보 조회 엔드포인트
+app.get("/api/detail-pet-tour", async (req, res) => {
+  const { contentId } = req.query;
+  const tourAPIKey = process.env.TOUR_API;
+  if (!tourAPIKey) {
+    return res.status(500).json({ error: "Tour API Key is missing in server" });
+  }
+  const url = `https://apis.data.go.kr/B551011/KorService1/detailPetTour1?serviceKey=${tourAPIKey}&MobileOS=ETC&MobileApp=ETC&contentId=${contentId}&_type=json`;
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    console.log("✅ 반려동물 여행정보 로드 성공:", data);
+    res.json(data);
+  } catch (error) {
+    console.error("❌ 반려동물 여행정보 호출 실패:", error);
+    res.status(500).json({ error: "반려동물 여행정보 호출 실패" });
+  }
+});
+
 // 관광 데이터 제공 API (예시 데이터)
 app.get("/api/data", (req, res) => {
   res.json([
