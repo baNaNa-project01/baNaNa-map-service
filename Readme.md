@@ -1,5 +1,13 @@
 # [현재 상황]
 
+### 25/02/16 구현 상황
+
+###### <hr>
+
+- glitch URL = https://fate-star-gram.glitch.me
+- 카카오 및 네이버 API에 URL등록 잊지말기.
+- glitch에 서버 배포 완료
+
 ### 25/02/15 구현 상황
 
 ###### <hr>
